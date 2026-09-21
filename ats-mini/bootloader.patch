@@ -1,0 +1,44 @@
+﻿diff --git a/components/bootloader_support/src/bootloader_utility.c b/components/bootloader_support/src/bootloader_utility.c
+index 1fae580e..5591a149 100644
+--- a/components/bootloader_support/src/bootloader_utility.c
++++ b/components/bootloader_support/src/bootloader_utility.c
+@@ -376,6 +376,9 @@ static int get_active_otadata_with_check_anti_rollback(const bootloader_state_t
+ }
+ #endif
+ 
++// ATS-Mini: OTA slot index of the recovery firmware (subtype ota_2).
++#define ATS_MINI_RECOVERY_SLOT 2
++
+ int bootloader_utility_get_selected_boot_partition(const bootloader_state_t *bs)
+ {
+     esp_ota_select_entry_t otadata[2];
+@@ -415,6 +418,10 @@ int bootloader_utility_get_selected_boot_partition(const bootloader_state_t *bs)
+         } else {
+             ESP_LOGI(TAG, "No factory image, trying OTA 0");
+             boot_index = 0;
++            if (bs->ota[ATS_MINI_RECOVERY_SLOT].offset != 0) {
++                ESP_LOGI(TAG, "ATS-Mini: no otadata, booting recovery OTA slot %d", ATS_MINI_RECOVERY_SLOT);
++                boot_index = ATS_MINI_RECOVERY_SLOT;
++            }
+             // Try to boot from ota_0.
+             if ((otadata[0].ota_seq == UINT32_MAX || otadata[0].crc != bootloader_common_ota_select_crc(&otadata[0])) &&
+                     (otadata[1].ota_seq == UINT32_MAX || otadata[1].crc != bootloader_common_ota_select_crc(&otadata[1]))) {
+@@ -443,6 +450,18 @@ int bootloader_utility_get_selected_boot_partition(const bootloader_state_t *bs)
+             uint32_t ota_seq = otadata[active_otadata].ota_seq - 1; // Raw OTA sequence number. May be more than # of OTA slots
+             boot_index = ota_seq % bs->app_count; // Actual OTA partition selection
+             ESP_LOGD(TAG, "Mapping seq %"PRIu32" -> OTA slot %d", ota_seq, boot_index);
++
++            // ATS-Mini: always boot the recovery slot unless this is a one-shot boot
++            // (otadata state NEW). The recovery starts a firmware as a one-shot via
++            // esp_ota_set_boot_partition(); after that firmware confirms itself (VALID)
++            // or fails to, the next boot returns to recovery.
++            if (boot_index != ATS_MINI_RECOVERY_SLOT &&
++                    bs->ota[ATS_MINI_RECOVERY_SLOT].offset != 0 &&
++                    otadata[active_otadata].ota_state != ESP_OTA_IMG_NEW) {
++                ESP_LOGI(TAG, "ATS-Mini: forcing recovery OTA slot %d", ATS_MINI_RECOVERY_SLOT);
++                boot_index = ATS_MINI_RECOVERY_SLOT;
++            }
++
+ #ifdef CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE
+             if (otadata[active_otadata].ota_state == ESP_OTA_IMG_NEW) {
+                 ESP_LOGD(TAG, "otadata[%d] is selected as new and marked PENDING_VERIFY state", active_otadata);
