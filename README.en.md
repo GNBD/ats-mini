@@ -1,6 +1,5 @@
 # ATS Mini
 
-![](docs/source/_static/esp32-si4732-ui-theme.jpg)
 
 > **⚠️ Work in progress** — This firmware is still under development. Crashes,
 > boot failures, data loss, etc. may occur. Use at your own risk.
@@ -18,6 +17,9 @@ Based on the following sources:
 * G8PTN, Dave:       https://github.com/G8PTN/ATS_MINI
 
 ## dual-boot (this fork)
+
+<img width="885" height="567" alt="image" src="https://github.com/user-attachments/assets/6eb3712e-d888-4019-a894-e673520c0385" />
+
 
 > **Hardware: ESP32-S3 N16R8 only.** This fork has been tested only on modules
 > with **16 MB flash and 8 MB OPI PSRAM (N16R8)**. Other variants (N8R2, N8R8,
