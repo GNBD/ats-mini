@@ -43,7 +43,7 @@ ENG: [README.en.md](README.en.md)
 
 ## Releases
 
-[Releases](https://github.com/esp32-si4732/ats-mini/releases) 페이지를 참고하세요.
+[Releases](https://github.com/esp32-si4732/GNBD/releases) 페이지를 참고하세요.
 
 ## Documentation
 
