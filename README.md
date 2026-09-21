@@ -39,7 +39,7 @@ SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 * [ats-mini/bootloader.md](ats-mini/bootloader.md) - 커스텀 부트로더와 빌드 방법
 * [ats-mini/partitions.csv](ats-mini/partitions.csv) - 16MB 파티션 레이아웃
 
-영어 문서: [README.en.md](README.en.md)
+ENG: [README.en.md](README.en.md)
 
 ## Releases
 
