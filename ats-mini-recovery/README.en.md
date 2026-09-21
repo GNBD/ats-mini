@@ -1,5 +1,10 @@
 # ATS Mini boot manager (dual-boot)
 
+> **⚠️ Work in progress** — Still under development. Crashes, boot failures,
+> data loss, etc. may occur. Use at your own risk.
+
+한국어 문서: [README.md](README.md)
+
 A small boot manager for the ATS Mini (ESP32-S3 + SI4732) that lives in its own
 `recovery` partition (`ota_2`). Together with a custom bootloader it turns the
 receiver into a **dual-boot** device: two independent firmwares can be kept in

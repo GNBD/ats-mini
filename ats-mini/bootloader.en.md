@@ -1,5 +1,10 @@
 # Custom bootloader (dual-boot)
 
+> **⚠️ Work in progress** — Still under development. Crashes, boot failures,
+> data loss, etc. may occur. Use at your own risk.
+
+한국어 문서: [bootloader.md](bootloader.md)
+
 `ats-mini/bootloader.bin` is a modified ESP-IDF second-stage bootloader. When it
 is present in the sketch directory, the Arduino ESP32 build copies it as the
 bootloader instead of the stock one. It makes the boot manager (`ota_2`) run
