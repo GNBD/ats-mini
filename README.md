@@ -48,8 +48,3 @@ SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 ## Documentation
 
 하드웨어, 소프트웨어, 플래시 문서는 <https://esp32-si4732.github.io/ats-mini/> 에 있습니다.
-
-## Discuss
-
-* [GitHub Discussions](https://github.com/esp32-si4732/ats-mini/discussions) - 기능 요청, 의견, 공유 등
-* [TalkRadio Telegram Chat](https://t.me/talkradio/174172) - 러시아어/영어 채팅
