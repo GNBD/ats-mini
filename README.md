@@ -11,27 +11,31 @@ Based on the following sources:
 * Goshante:          https://github.com/goshante/ats20_ats_ex
 * G8PTN, Dave:       https://github.com/G8PTN/ATS_MINI
 
-## Recovery-first boot (this fork)
+## Dual-boot (this fork)
 
 > **Hardware: ESP32-S3 N16R8 only.** This fork has been tested only on modules
 > with **16 MB flash and 8 MB OPI PSRAM (N16R8)**. Other variants (N8R2, N8R8,
 > N16R2, ...) have **not been tested**. The partition table and custom bootloader
 > assume 16 MB flash and OPI PSRAM; using them on other hardware may not boot.
 
-This fork adds a dedicated **recovery partition** and a custom bootloader so the
-receiver always boots the recovery first:
+This fork turns the receiver into a **dual-boot** device. A small **boot manager**
+runs first on every power-on and lets you choose which firmware to boot:
 
 ```
-power on -> recovery (ota_2) -> application (app0/app1)
+power on -> boot manager (ota_2) -> app0  (firmware A)
+                                 -> app1  (firmware B)
 ```
 
-* The recovery can re-flash `app0`/`app1` from a file or over WiFi, even if the
-  application is broken.
-* Any firmware can be placed in `app0`/`app1` without losing access to recovery.
+* Two independent firmwares can be kept in `app0` and `app1` and switched at
+  boot, without re-flashing.
+* The boot manager can flash a new firmware into either slot (from a file or over
+  WiFi), so one slot can be updated while the other keeps working.
+* Even if one firmware is broken, the boot manager still runs, so you can always
+  switch to the other slot or re-flash.
 
 See:
 
-* [ats-mini-recovery/README.md](ats-mini-recovery/README.md) - recovery firmware
+* [ats-mini-recovery/README.md](ats-mini-recovery/README.md) - boot manager firmware
 * [ats-mini/bootloader.md](ats-mini/bootloader.md) - custom bootloader and how to build it
 * [ats-mini/partitions.csv](ats-mini/partitions.csv) - 16 MB partition layout
 

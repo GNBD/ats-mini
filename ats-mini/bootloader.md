@@ -1,27 +1,27 @@
-# Custom bootloader (recovery-first boot)
+# Custom bootloader (dual-boot)
 
 `ats-mini/bootloader.bin` is a modified ESP-IDF second-stage bootloader. When it
 is present in the sketch directory, the Arduino ESP32 build copies it as the
-bootloader instead of the stock one.
+bootloader instead of the stock one. It makes the boot manager (`ota_2`) run
+first on every power-on, which is what enables dual-boot.
 
 ## What it changes
 
 The stock bootloader boots whatever OTA slot the `otadata` partition points to.
-The ATS Mini application normally sets the recovery slot (`ota_2`) as the next
-boot target itself, so the recovery-first behaviour breaks as soon as a firmware
-that does not do that is flashed into `app0`/`app1`.
-
-The modified bootloader enforces the order in `bootloader_utility_get_selected_boot_partition()`:
+The boot manager normally sets the `ota_2` slot as the next boot target itself,
+but that breaks as soon as a firmware that does not do that is flashed into
+`app0`/`app1`. The modified bootloader enforces the boot manager in
+`bootloader_utility_get_selected_boot_partition()`:
 
 - If the selected OTA slot is not `ota_2` and its `otadata` state is not
-  `ESP_OTA_IMG_NEW`, boot `ota_2` (the recovery) instead.
-- Otherwise keep the normal selection. The recovery starts an application with
+  `ESP_OTA_IMG_NEW`, boot `ota_2` (the boot manager) instead.
+- Otherwise keep the normal selection. The boot manager starts a firmware with
   `esp_ota_set_boot_partition()`, which marks it `ESP_OTA_IMG_NEW`, so it is
   allowed to run as a one-shot boot.
-- When `otadata` is empty, boot `ota_2` if the recovery partition exists.
+- When `otadata` is empty, boot `ota_2` if the boot manager partition exists.
 
-Result: `power on -> recovery -> application`, regardless of the firmware in
-`app0`/`app1`.
+Result: `power on -> boot manager -> firmware`, regardless of which firmware is
+in `app0`/`app1`.
 
 ## Building
 
