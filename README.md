@@ -1,9 +1,10 @@
 # ATS Mini
 
+![](docs/source/_static/esp32-si4732-ui-theme.jpg)
 
-This firmware is for use on the SI4732 (ESP32-S3) Mini/Pocket Receiver
+SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 
-Based on the following sources:
+다음 소스를 기반으로 합니다:
 
 * Volos Projects:    https://github.com/VolosR/TEmbedFMRadio
 * PU2CLR, Ricardo:   https://github.com/pu2clr/SI4735
@@ -11,39 +12,42 @@ Based on the following sources:
 * Goshante:          https://github.com/goshante/ats20_ats_ex
 * G8PTN, Dave:       https://github.com/G8PTN/ATS_MINI
 
-## Dual-boot (this fork)
+## dual-boot (이 포크)
 
-> **Hardware: ESP32-S3 N16R8 only.** This fork has been tested only on modules
-> with **16 MB flash and 8 MB OPI PSRAM (N16R8)**. Other variants (N8R2, N8R8,
-> N16R2, ...) have **not been tested**. The partition table and custom bootloader
-> assume 16 MB flash and OPI PSRAM; using them on other hardware may not boot.
+> **하드웨어: ESP32-S3 N16R8 전용.** 이 포크는 **16MB flash + 8MB OPI PSRAM
+> (N16R8)** 모듈에서만 테스트했습니다. 다른 버전(N8R2, N8R8, N16R2 등)은
+> **테스트하지 않았습니다.** 파티션 테이블과 커스텀 부트로더가 16MB flash와
+> OPI PSRAM을 전제로 하므로, 다른 하드웨어에서는 부팅되지 않을 수 있습니다.
 
-This fork turns the receiver into a **dual-boot** device. A small **boot manager**
-runs first on every power-on and lets you choose which firmware to boot:
+이 포크는 수신기를 **dual-boot** 기기로 만듭니다. 전원을 켤 때마다 작은
+**부트 매니저**가 먼저 실행되어, 부팅할 펌웨어를 선택할 수 있습니다:
 
 ```
-power on -> boot manager (ota_2) -> app0  (firmware A)
-                                 -> app1  (firmware B)
+전원 ON -> 부트 매니저 (ota_2) -> app0  (펌웨어 A)
+                              -> app1  (펌웨어 B)
 ```
 
-* Two independent firmwares can be kept in `app0` and `app1` and switched at
-  boot, without re-flashing.
-* The boot manager can flash a new firmware into either slot (from a file or over
-  WiFi), so one slot can be updated while the other keeps working.
-* Even if one firmware is broken, the boot manager still runs, so you can always
-  switch to the other slot or re-flash.
+* 서로 다른 두 펌웨어를 `app0`과 `app1`에 넣고, 재플래시 없이 부팅 시 전환할 수 있습니다.
+* 부트 매니저가 각 슬롯에 새 펌웨어를 플래시할 수 있어(파일 또는 WiFi), 한쪽을 업데이트하는 동안 다른 쪽은 그대로 사용할 수 있습니다.
+* 한쪽 펌웨어가 망가져도 부트 매니저는 항상 실행되므로, 다른 슬롯으로 전환하거나 다시 플래시할 수 있습니다.
 
-See:
+참고:
 
-* [ats-mini-recovery/README.md](ats-mini-recovery/README.md) - boot manager firmware
-* [ats-mini/bootloader.md](ats-mini/bootloader.md) - custom bootloader and how to build it
-* [ats-mini/partitions.csv](ats-mini/partitions.csv) - 16 MB partition layout
+* [ats-mini-recovery/README.md](ats-mini-recovery/README.md) - 부트 매니저 펌웨어
+* [ats-mini/bootloader.md](ats-mini/bootloader.md) - 커스텀 부트로더와 빌드 방법
+* [ats-mini/partitions.csv](ats-mini/partitions.csv) - 16MB 파티션 레이아웃
+
+영어 문서: [README.en.md](README.en.md)
 
 ## Releases
 
-Check out the [Releases](https://github.com/esp32-si4732/ats-mini/releases) page.
+[Releases](https://github.com/esp32-si4732/ats-mini/releases) 페이지를 참고하세요.
 
 ## Documentation
 
-The hardware, software and flashing documentation is available at <https://esp32-si4732.github.io/ats-mini/>
+하드웨어, 소프트웨어, 플래시 문서는 <https://esp32-si4732.github.io/ats-mini/> 에 있습니다.
 
+## Discuss
+
+* [GitHub Discussions](https://github.com/esp32-si4732/ats-mini/discussions) - 기능 요청, 의견, 공유 등
+* [TalkRadio Telegram Chat](https://t.me/talkradio/174172) - 러시아어/영어 채팅
