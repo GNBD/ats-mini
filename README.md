@@ -39,7 +39,3 @@ Check out the [Releases](https://github.com/esp32-si4732/ats-mini/releases) page
 
 The hardware, software and flashing documentation is available at <https://esp32-si4732.github.io/ats-mini/>
 
-## Discuss
-
-* [GitHub Discussions](https://github.com/esp32-si4732/ats-mini/discussions) - the best place for feature requests, observations, sharing, etc.
-* [TalkRadio Telegram Chat](https://t.me/talkradio/174172) - informal space to chat in Russian and English.
