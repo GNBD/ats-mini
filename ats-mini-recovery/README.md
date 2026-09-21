@@ -5,6 +5,10 @@ its own `recovery` partition (`ota_2`). Combined with a custom bootloader, it
 makes the receiver **always boot the recovery first**, no matter what firmware is
 flashed into `app0`/`app1`.
 
+> **Hardware: ESP32-S3 N16R8 only.** Tested only on modules with **16 MB flash
+> and 8 MB OPI PSRAM (N16R8)**. Other variants (N8R2, N8R8, N16R2, ...) have
+> **not been tested**.
+
 ## Why a separate recovery partition?
 
 The stock firmware boots straight into the application, so a broken or

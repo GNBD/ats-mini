@@ -47,6 +47,8 @@ Arduino core. This project targets **ESP-IDF v5.5.5** and the settings in
 
 ## Notes
 
+- **Hardware: ESP32-S3 N16R8 only.** The bootloader was built for **16 MB flash
+  and 8 MB OPI PSRAM (N16R8)**. Other variants have not been tested.
 - The patch only touches `components/bootloader_support/src/bootloader_utility.c`.
 - `bootloader.bin` is committed so that CI and normal builds use it without
   requiring an ESP-IDF installation.

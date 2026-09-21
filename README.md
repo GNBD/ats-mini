@@ -14,6 +14,11 @@ Based on the following sources:
 
 ## Recovery-first boot (this fork)
 
+> **Hardware: ESP32-S3 N16R8 only.** This fork has been tested only on modules
+> with **16 MB flash and 8 MB OPI PSRAM (N16R8)**. Other variants (N8R2, N8R8,
+> N16R2, ...) have **not been tested**. The partition table and custom bootloader
+> assume 16 MB flash and OPI PSRAM; using them on other hardware may not boot.
+
 This fork adds a dedicated **recovery partition** and a custom bootloader so the
 receiver always boots the recovery first:
 
