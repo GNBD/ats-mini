@@ -1,0 +1,60 @@
+Third-party notices for ATS Mini / ATS Mini dualboot
+====================================================
+
+This repository is primarily MIT licensed. See the LICENSE file.
+
+The following components are **not** covered by the MIT license and keep
+their original copyright and license terms:
+
+1) Rotary encoder handler (Rotary.cpp / Rotary.h)
+   -----------------------------------------------
+   Copyright 2011 Ben Buxton <bb@cactii.net>
+   License: GNU General Public License version 3 (GPL-3.0)
+   Appears in:
+     - ats-mini/Rotary.cpp
+     - ats-mini-recovery/Rotary.cpp (upstream / remote copies)
+     - ats-mini-recovery-beta/Rotary.cpp (upstream / remote copies)
+   Contact: bb@cactii.net
+
+2) Hardware and related design materials (not always in this repo)
+   ----------------------------------------------------------------
+   ESP32S3-SI4732 receiver hardware / software by Sunnygold
+   License: CC BY-NC-SA 3.0 (attribution, non-commercial, share-alike)
+   Project: https://oshwhub.com/sunnygold/esp32s3-si4732-shou-yin-ji
+   Based in part on Ralph Xavier's work (MIT).
+
+3) Firmware lineage / attribution (MIT upstream)
+   ----------------------------------------------
+   Upstream: https://github.com/esp32-si4732/ats-mini
+   This project is a public fork. Credits (README):
+     - Volos Projects (TEmbedFMRadio)
+     - PU2CLR, Ricardo (SI4735 library)
+     - Ralph Xavier (SI4735 port)
+     - Goshante (ATS-20 firmware)
+     - G8PTN, Dave (ATS_MINI)
+
+4) Linked libraries at build/runtime (not vendored here)
+   -----------------------------------------------------
+   - arduino-esp32 core / ESP-IDF components: LGPL-2.1 (and others;
+     see Espressif / Arduino ESP32 licensing)
+   - LovyanGFX: MIT
+   - LittleFS / Arduino FS: MIT (LGPL-compatible usage via Arduino)
+   - PU2CLR SI4735 Arduino Library: MIT
+   - Async TCP / ESP Async WebServer: LGPL-3.0 (library licenses apply
+     when you distribute binaries that link them)
+
+Binary releases that link LGPL libraries must allow relinking /
+replacement of those libraries as required by their licenses.
+
+---
+
+GPL note
+--------
+Files under GPL-3.0 (notably Rotary.cpp) remain GPL-3.0. When you
+distribute firmware binaries that include GPL-covered work combined
+as a single work, the combined work may be subject to GPL-3.0 terms
+for that distribution. The rest of this repository's original MIT
+grant continues to apply to MIT-covered files where compatible.
+
+This NOTICE is provided for attribution and license transparency. It
+does not replace the license text of each component.
