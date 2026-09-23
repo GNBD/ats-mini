@@ -1,38 +1,12 @@
-# ATS Mini
-
-![](docs/source/_static/esp32-si4732-ui-theme.jpg)
-
-This firmware is for use on the SI4732 (ESP32-S3) Mini/Pocket Receiver
-
-Based on the following sources:
-
-* Volos Projects:    https://github.com/VolosR/TEmbedFMRadio
-* PU2CLR, Ricardo:   https://github.com/pu2clr/SI4735
-* Ralph Xavier:      https://github.com/ralphxavier/SI4735
-* Goshante:          https://github.com/goshante/ats20_ats_ex
-* G8PTN, Dave:       https://github.com/G8PTN/ATS_MINI
-
-## Releases
-
-Check out the [Releases](https://github.com/esp32-si4732/ats-mini/releases) page.
-
-## Documentation
-
-The hardware, software and flashing documentation is available at <https://esp32-si4732.github.io/ats-mini/>
-
-## Discuss
-
-* [GitHub Discussions](https://github.com/esp32-si4732/ats-mini/discussions) - the best place for feature requests, observations, sharing, etc.
-* [TalkRadio Telegram Chat](https://t.me/talkradio/174172) - informal space to chat in Russian and English.
-
+﻿# ATS Mini Dualboot> **?좑툘 誘몄셿??(work in progress)** ?????뚯썾?대뒗 ?꾩쭅 媛쒕컻 以묒엯?덈떎. ?щ옒??> 遺???ㅽ뙣, ?곗씠???먯떎 ?깆씠 諛쒖깮?????덉뒿?덈떎. ?ъ슜??二쇱쓽?섏꽭??SI4732 (ESP32-S3) Mini/Pocket ?섏떊湲곗슜 ?뚯썾?댁엯?덈떎.?ㅼ쓬 ?뚯뒪瑜?湲곕컲?쇰줈 ?⑸땲??* Volos Projects:    https://github.com/VolosR/TEmbedFMRadio* PU2CLR, Ricardo:   https://github.com/pu2clr/SI4735* Ralph Xavier:      https://github.com/ralphxavier/SI4735* Goshante:          https://github.com/goshante/ats20_ats_ex* G8PTN, Dave:       https://github.com/G8PTN/ATS_MINI## dual-boot (???ы겕)<img width="885" height="567" alt="image" src="https://github.com/user-attachments/assets/8d64166c-15dc-4acb-8fe8-5a2c3f4aea3c" />> **?섎뱶?⑥뼱: ESP32-S3 N16R8 ?꾩슜.** ???ы겕??**16MB flash + 8MB OPI PSRAM> (N16R8)** 紐⑤뱢?먯꽌留??뚯뒪?명뻽?듬땲?? ?ㅻⅨ 踰꾩쟾(N8R2, N8R8, N16R2 ???> **?뚯뒪?명븯吏 ?딆븯?듬땲??** ?뚰떚???뚯씠釉붽낵 而ㅼ뒪? 遺?몃줈?붽? 16MB flash?> OPI PSRAM???꾩젣濡??섎?濡? ?ㅻⅨ ?섎뱶?⑥뼱?먯꽌??遺?낅릺吏 ?딆쓣 ???덉뒿?덈떎.???ы겕???섏떊湲곕? **dual-boot** 湲곌린濡?留뚮벊?덈떎. ?꾩썝??耳??뚮쭏???묒?**遺??留ㅻ땲?**媛 癒쇱? ?ㅽ뻾?섏뼱, 遺?낇븷 ?뚯썾?대? ?좏깮?????덉뒿?덈떎:```?꾩썝 ON -> 遺??留ㅻ땲? (ota_2) -> app0  (?뚯썾??A)                              -> app1  (?뚯썾??B)```* ?쒕줈 ?ㅻⅨ ???뚯썾?대? `app0`怨?`app1`???ｊ퀬, ?ы뵆?섏떆 ?놁씠 遺?????꾪솚?????덉뒿?덈떎.* 遺??留ㅻ땲?媛 媛??щ’?????뚯썾?대? ?뚮옒?쒗븷 ???덉뼱(?뚯씪 ?먮뒗 WiFi), ?쒖そ???낅뜲?댄듃?섎뒗 ?숈븞 ?ㅻⅨ 履쎌? 洹몃?濡??ъ슜?????덉뒿?덈떎.* ?쒖そ ?뚯썾?닿? 留앷??몃룄 遺??留ㅻ땲?????긽 ?ㅽ뻾?섎?濡? ?ㅻⅨ ?щ’?쇰줈 ?꾪솚?섍굅???ㅼ떆 ?뚮옒?쒗븷 ???덉뒿?덈떎.李멸퀬:* [ats-mini-recovery/README.md](ats-mini-recovery/README.md) - 遺??留ㅻ땲? ?뚯썾??* [ats-mini/bootloader.md](ats-mini/bootloader.md) - 而ㅼ뒪? 遺?몃줈?붿? 鍮뚮뱶 諛⑸쾿* [ats-mini/partitions.csv](ats-mini/partitions.csv) - 16MB ?뚰떚???덉씠?꾩썐ENG: [README.en.md](README.en.md)## Releases[Releases]([https://github.com/esp32-si4732/GNBD/releases](https://github.com/GNBD/ats-mini-dualboot/releases)) ?섏씠吏瑜?李멸퀬?섏꽭??## Documentation?섎뱶?⑥뼱, ?뚰봽?몄썾?? ?뚮옒??臾몄꽌??<https://esp32-si4732.github.io/ats-mini/> ???덉뒿?덈떎.
 ## License
 
-This project is primarily [MIT](LICENSE) — Copyright (c) 2025 ESP32-SI4732 Radio.
+이 저장소는 기본적으로 [MIT](LICENSE)입니다 — Copyright (c) 2025 ESP32-SI4732 Radio.
 
-Third-party code is **not** all MIT. Notably:
+서드파티 코드는 **전부 MIT가 아닙니다.** 특히:
 
 * `Rotary.cpp` — Copyright 2011 Ben Buxton, **GPL-3.0**
-* Hardware lineage — Sunnygold, **CC BY-NC-SA 3.0** (see docs)
-* Linked libraries (ESP32 core **LGPL-2.1**, LovyanGFX **MIT**, etc.)
+* 하드웨어 계보 — Sunnygold, **CC BY-NC-SA 3.0** (문서 참고)
+* 링크 라이브러리 (ESP32 core **LGPL-2.1**, LovyanGFX **MIT** 등)
 
-Full attribution: see [NOTICE](NOTICE).
+전체 귀속: [NOTICE](NOTICE) 참고.
