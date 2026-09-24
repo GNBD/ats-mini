@@ -66,14 +66,24 @@ original code written for this repository is provided under the
 [MIT License](LICENSE). Third-party components remain subject to their own
 copyright and license terms.
 
+**Firmware binaries:** Because they link GPL-3.0 covered code (Rotary),
+distributed firmware binaries are subject to **GPL-3.0** terms for the
+combined work. Corresponding source code (the matching commit/tag) must be
+provided when distributing binaries.
+
 In particular:
 
 * `ats-mini/Rotary.cpp` and `ats-mini/Rotary.h` contain the Rotary encoder
   implementation attributed to Ben Buxton and are distributed under
   **GPL-3.0** (full text: [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt)).
+* `ats-mini/patch_init.h` contains SSB patch data from a separate source
+  (Vadim Afonkin) with unclear licensing; verify before commercial
+  redistribution. See [NOTICE](NOTICE) section 3.1.
 * Some external libraries may be distributed under MIT, LGPL, or other licenses.
-* Hardware designs, documentation, or other assets referenced by this project
-  may be subject to separate license terms.
+* Hardware designs (e.g. Sunnygold) may be subject to **CC BY-NC-SA 3.0**
+  (non-commercial): [LICENSES/CC-BY-NC-SA-3.0.txt](LICENSES/CC-BY-NC-SA-3.0.txt).
+* Volos Projects (TEmbedFMRadio) has **no license file** — exercise caution
+  when copying or redistributing material from it.
 
 Before redistributing source code, firmware binaries, hardware files, or
 documentation, review [LICENSE](LICENSE), [NOTICE](NOTICE), and the

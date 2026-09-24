@@ -60,13 +60,21 @@ ENG: [README.en.md](README.en.md)
 제공됩니다. 제3자 구성요소에는 각 구성요소의 별도 저작권 및
 라이선스 조건이 적용됩니다.
 
+**펌웨어 바이너리:** GPL-3.0 코드(Rotary)와 링크되므로, 배포되는
+펌웨어 바이너리는 결합 저작물에 대해 **GPL-3.0** 조건이 적용됩니다.
+바이너리 배포 시 해당 커밋/태그의 소스 코드를 함께 제공해야 합니다.
+
 특히 다음 사항을 확인해야 합니다.
 
 * `ats-mini/Rotary.cpp` 및 `ats-mini/Rotary.h`에는 Ben Buxton의
   로터리 엔코더 구현이 포함되어 있으며 **GPL-3.0** 조건이 적용됩니다.
   전문: [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt)
+* `ats-mini/patch_init.h`의 SSB 패치 데이터는 별도 출처(Vadim Afonkin)
+ 이며 라이선스가 명확하지 않습니다. 상업적 배포 전 확인 필요. [NOTICE](NOTICE) §3.1
 * 외부 라이브러리에는 MIT, LGPL 또는 기타 라이선스가 적용될 수 있습니다.
-* 하드웨어 설계, 문서 및 기타 자료에는 별도의 라이선스 조건이 적용될 수 있습니다.
+* 하드웨어 설계(Sunnygold 등)에는 **CC BY-NC-SA 3.0**(비상업)이 적용될 수 있습니다.
+  전문: [LICENSES/CC-BY-NC-SA-3.0.txt](LICENSES/CC-BY-NC-SA-3.0.txt)
+* Volos Projects(TEmbedFMRadio)는 **라이선스 파일이 없음** — 복사·재배포 시 주의.
 
 소스 코드, 펌웨어 바이너리, 하드웨어 파일 또는 문서를 재배포하기 전에는
 [LICENSE](LICENSE), [NOTICE](NOTICE), [LICENSES/](LICENSES/) 및 각 파일의

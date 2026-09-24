@@ -11,6 +11,15 @@ Third-party components retain their original copyright and license terms.
 This NOTICE file is provided for attribution and license transparency. It does
 not replace the license text or copyright notices of any third-party component.
 
+IMPORTANT: Firmware binary distribution
+---------------------------------------
+
+Firmware binaries built from this repository link GPL-3.0 covered code
+(see section 1). As a result, distributed firmware binaries are subject to
+GPL-3.0 terms for the combined work, in addition to any other third-party
+obligations described below. Provide corresponding source code (this
+repository at the matching commit/tag) when distributing binaries.
+
 1. Rotary encoder implementation
 --------------------------------
 
@@ -21,10 +30,6 @@ Ben Buxton:
 - ats-mini/Rotary.h
 - ats-mini-recovery/Rotary.cpp
 - ats-mini-recovery/Rotary.h
-
-If the following directory is present in a particular revision, its copies
-must also be included in this notice:
-
 - ats-mini-recovery-beta/Rotary.cpp
 - ats-mini-recovery-beta/Rotary.h
 
@@ -35,40 +40,46 @@ Copyright:
 License:
 - GNU General Public License version 3 (GPL-3.0)
 
-These files are not relicensed under the repository MIT License. The original
-copyright and license notices in these files must be retained.
+These files carry SPDX identifiers (SPDX-License-Identifier: GPL-3.0) and are
+not relicensed under the repository MIT License. The original copyright and
+license notices in these files must be retained.
 
 The complete GPL-3.0 license text is available at:
 
-https://www.gnu.org/licenses/gpl-3.0.txt
+- https://www.gnu.org/licenses/gpl-3.0.txt
+- LICENSES/GPL-3.0.txt
 
 When distributing firmware or other works containing this GPL-covered code,
-review and comply with the applicable GPL-3.0 requirements, including
-copyright notices, license text, source-code availability, and other
-applicable distribution obligations.
+comply with the applicable GPL-3.0 requirements, including copyright notices,
+license text, source-code availability, and other applicable distribution
+obligations.
 
 2. Upstream projects and firmware lineage
 -----------------------------------------
 
 This repository is a public fork and derivative work related to the following
-projects:
+projects. License status as verified on 2026-09-25:
 
-- ATS Mini upstream project:
+- ATS Mini upstream project (MIT):
   https://github.com/esp32-si4732/ats-mini
 
-- Volos Projects TEmbedFMRadio:
+- Volos Projects TEmbedFMRadio (NO LICENSE FILE — all rights reserved by
+  default under copyright law; not CC BY-NC-SA):
   https://github.com/VolosR/TEmbedFMRadio
+  Note: This repository does not publish a license. Treat any copied or
+  adapted material with caution; obtain permission from the author if
+  redistribution of substantial portions is intended.
 
-- PU2CLR SI4735 Arduino Library:
+- PU2CLR SI4735 Arduino Library (MIT):
   https://github.com/pu2clr/SI4735
 
-- Ralph Xavier SI4735 port:
+- Ralph Xavier SI4735 port (MIT, Copyright 2021 ralphxavier):
   https://github.com/ralphxavier/SI4735
 
-- Goshante ATS-20 firmware:
+- Goshante ATS-20 firmware (MIT):
   https://github.com/goshante/ats20_ats_ex
 
-- G8PTN ATS_MINI:
+- G8PTN ATS_MINI (MIT, Copyright 2025 G8PTN):
   https://github.com/G8PTN/ATS_MINI
 
 The applicable license for each copied or modified file is determined by the
@@ -86,7 +97,11 @@ projects and must be reviewed against their original source and license
 notices:
 
 - ats-mini/SI4735-fixed.h
+  Derived from PU2CLR SI4735 Arduino Library (MIT).
+
 - ats-mini/patch_init.h
+  SSB patch content. See section 3.1.
+
 - Other files containing an upstream copyright or license notice
 
 The original copyright, attribution, and license notices in these files must
@@ -94,6 +109,25 @@ be preserved.
 
 If a file does not contain a clear license notice, the applicable upstream
 license must be verified before redistribution.
+
+3.1 SSB patch content (Vadim Afonkin)
+-------------------------------------
+
+ats-mini/patch_init.h contains SSBRX patch data adapted from work published
+by Mr. Vadim Afonkin:
+
+- Original notes (via PU2CLR SI4735 library documentation): the patch content
+  is not part of the PU2CLR library itself; the PU2CLR author does not
+  encourage use of the SSB patches for commercial purposes.
+
+- Source reference:
+  https://www.dropbox.com/sh/xzofrl8rfaaqh59/AAA5au2_CVdi50NBtt0IivyIa?dl=0
+  (as documented in ats-mini/patch_init.h and PU2CLR SI4735 docs)
+
+No explicit open-source license has been published for the raw patch bytes.
+Before redistributing firmware binaries or the patch file outside personal /
+non-commercial use, verify terms with the original publisher or remove the
+patch content.
 
 4. Build platform and framework components
 ------------------------------------------
@@ -112,6 +146,8 @@ Build platform:
   Version and component licenses depend on the Arduino-ESP32 distribution.
   Source:
   https://github.com/espressif/esp-idf
+  Primary component license: LGPL-2.1 (and others; see Espressif / Arduino
+  ESP32 licensing for the exact component list).
 
 Arduino-ESP32 and ESP-IDF contain multiple components with different
 copyright and license terms. Their licenses must be reviewed from the exact
@@ -131,6 +167,9 @@ The following framework components are used by the firmware where applicable:
 These components are not relicensed under the MIT License of this repository.
 The applicable notices from Arduino-ESP32 and ESP-IDF remain in effect.
 
+Binary releases that link LGPL libraries must allow relinking or replacement
+of those libraries as required by their licenses.
+
 5. External Arduino libraries
 -----------------------------
 
@@ -149,8 +188,10 @@ Source:
 - https://github.com/pu2clr/SI4735
 
 License:
-- MIT, subject to verification against the exact source version used for
-  each firmware release.
+- MIT (verified against upstream repository)
+
+Copyright:
+- Copyright (c) 2019 Ricardo Lima Caratti
 
 The copyright and license notices of the upstream library must be retained
 where its code is copied, modified, or distributed.
@@ -168,38 +209,41 @@ Source:
 - https://github.com/lovyan03/LovyanGFX
 
 License:
-- MIT, subject to verification against the exact source version used for
-  each firmware release.
+- MIT (verify against the exact source version used for each firmware
+  release)
 
 5.3 Async TCP
 -------------
 
 Library:
-- Async TCP
+- Async TCP (ESP32Async / mathieucarbou lineage)
 
 Version used by this project:
 - 3.5.0
 
-The exact upstream repository and license must be verified against the
-dependency installed by the build environment for the corresponding release.
+License:
+- LGPL-3.0
 
 This repository does not relicense Async TCP. Retain the upstream copyright
-and license notices when required.
+and license notices when required. Verify the exact upstream repository
+against the dependency installed by the build environment for each release.
 
 5.4 ESP Async WebServer
 -----------------------
 
 Library:
-- ESP Async WebServer
+- ESP Async WebServer (ESP32Async / mathieucarbou lineage)
 
 Version used by this project:
 - 3.12.1
 
-The exact upstream repository and license must be verified against the
-dependency installed by the build environment for the corresponding release.
+License:
+- LGPL-3.0
 
 This repository does not relicense ESP Async WebServer. Retain the upstream
-copyright and license notices when required.
+copyright and license notices when required. Verify the exact upstream
+repository against the dependency installed by the build environment for each
+release.
 
 5.5 NTPClient
 -------------
@@ -210,12 +254,14 @@ Library:
 Version used by this project:
 - 3.2.1
 
-Expected upstream project:
+Upstream project:
 - https://github.com/arduino-libraries/NTPClient
 
-The exact upstream repository, copyright notice, and license must be verified
-against the dependency installed by the build environment for the
-corresponding release.
+License:
+- MIT (verify against the exact source version used for each firmware release)
+
+Copyright:
+- Copyright (c) 2015 Jarrod Ragsdale
 
 This repository does not relicense NTPClient. Retain the upstream copyright
 and license notices when required.
@@ -283,6 +329,9 @@ The license identified for the related hardware and design materials is:
 
 - CC BY-NC-SA 3.0
 
+Full text: LICENSES/CC-BY-NC-SA-3.0.txt
+Deed: https://creativecommons.org/licenses/by-nc-sa/3.0/
+
 This license may require:
 
 - Attribution to the original author
@@ -299,22 +348,21 @@ documentation, or other separately licensed materials.
 --------------------------------
 
 Firmware releases may contain code linked with or derived from third-party
-components.
+components, including GPL-3.0 covered Rotary encoder code (section 1).
 
 When distributing firmware binaries, retain or provide access to the
 applicable:
 
 - Copyright notices
-- License texts
+- License texts (including GPL-3.0 for the combined work)
 - Third-party notices
-- Source-code information where required
-- Relinking or replacement information where required by the applicable
-  license
+- Corresponding source code (required by GPL-3.0)
+- Relinking or replacement information where required by LGPL licenses
 
-Each firmware release should identify the source revision used to build the
+Each firmware release must identify the source revision used to build the
 binary.
 
-The corresponding source code for a release should be available from the
+The corresponding source code for a release must be available from the
 repository at the commit or tag used to build that release.
 
 10. Repository MIT license scope
@@ -350,65 +398,9 @@ release, product, or endorsement of:
 - Goshante
 - G8PTN
 - Sunnygold
+- Vadim Afonkin
 - Ben Buxton
 - Any other upstream project or copyright holder
 
 This NOTICE file is provided for attribution and license transparency. It does
-not replace the license text of any component.- https://github.com/VolosR/TEmbedFMRadio
-- https://github.com/pu2clr/SI4735
-- https://github.com/ralphxavier/SI4735
-- https://github.com/goshante/ats20_ats_ex
-- https://github.com/G8PTN/ATS_MINI
-
-Each copied or modified file is governed by that file's original notice
-and the upstream project's license.
-
-
-3. External libraries
----------------------
-
-External libraries used during the build may have separate licenses,
-including MIT, LGPL, or other terms. This repository does not relicense
-external libraries.
-
-Known linked libraries (not vendored in this repository):
-
-- arduino-esp32 core / ESP-IDF components: LGPL-2.1 (and others;
-  see Espressif / Arduino ESP32 licensing)
-- LovyanGFX: MIT
-- LittleFS / Arduino FS: MIT
-- PU2CLR SI4735 Arduino Library: MIT
-- Async TCP / ESP Async WebServer: LGPL-3.0
-
-For each dependency, verify the exact version, upstream copyright
-notice, applicable license, and source-code / relinking obligations
-for binary distributions.
-
-Binary releases that link LGPL libraries must allow relinking or
-replacement of those libraries as required by their licenses.
-
-
-4. Hardware and documentation
------------------------------
-
-Hardware designs, documentation, images, and other assets are not
-automatically covered by the software license.
-
-If material from the Sunnygold ESP32S3-SI4732 project is copied or
-redistributed, retain the required attribution and comply with the
-applicable CC BY-NC-SA 3.0 terms:
-
-https://oshwhub.com/sunnygold/esp32s3-si4732-shou-yin-ji
-
-Do not assume that the software MIT license permits commercial use of
-hardware designs or other separately licensed materials.
-
-
-5. Distribution notice
-----------------------
-
-When distributing source code or firmware binaries, retain the
-applicable copyright and license notices and provide access to the
-corresponding source code where required by the applicable license.
-
-This NOTICE file does not replace the license text of any component.
+not replace the license text of any component.
