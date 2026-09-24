@@ -1,4 +1,7 @@
+// SPDX-FileCopyrightText: 2011 Ben Buxton
+// SPDX-License-Identifier: GPL-3.0
 // Rotary encoder library for Arduino.
+// Copyright 2011 Ben Buxton. Licenced under the GNU GPL Version 3.
 #include "Arduino.h"
 
 #ifndef rotary_h

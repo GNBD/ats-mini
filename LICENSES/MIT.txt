@@ -19,19 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-Scope of this license
----------------------
-
-This MIT License applies only to original code in this repository where no
-different copyright or license notice is provided.
-
-Files and materials containing a different copyright or license notice are
-not relicensed under this MIT License. Third-party components remain subject
-to their own license terms.
-
-In particular, ats-mini/Rotary.cpp and ats-mini/Rotary.h are Copyright 2011
-Ben Buxton and licensed under GPL-3.0 (see LICENSES/GPL-3.0.txt).
-
-See the NOTICE file and the LICENSES directory for attribution and
-third-party license information.

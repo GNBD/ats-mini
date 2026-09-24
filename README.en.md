@@ -49,8 +49,34 @@ See:
 
 ## Releases
 
-Check out the [Releases](https://github.com/GNBD/ats-mini/releases) page.
+Check out the [Releases](https://github.com/GNBD/ats-mini-dualboot/releases) page.
 
 ## Documentation
 
 The hardware, software and flashing documentation is available at <https://esp32-si4732.github.io/ats-mini/>
+
+
+## License and third-party notices
+
+This repository contains both original code and third-party components.
+
+Unless a file or directory contains a different copyright or license notice,
+original code written for this repository is provided under the
+[MIT License](LICENSE). Third-party components remain subject to their own
+copyright and license terms.
+
+In particular:
+
+* `ats-mini/Rotary.cpp` and `ats-mini/Rotary.h` contain the Rotary encoder
+  implementation attributed to Ben Buxton and are distributed under
+  **GPL-3.0** (full text: [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt)).
+* Some external libraries may be distributed under MIT, LGPL, or other licenses.
+* Hardware designs, documentation, or other assets referenced by this project
+  may be subject to separate license terms.
+
+Before redistributing source code, firmware binaries, hardware files, or
+documentation, review [LICENSE](LICENSE), [NOTICE](NOTICE), and the
+applicable files under [LICENSES/](LICENSES/).
+
+This project is not an official product of the upstream projects or hardware
+design authors unless explicitly stated otherwise.

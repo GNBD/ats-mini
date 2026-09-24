@@ -43,21 +43,33 @@ ENG: [README.en.md](README.en.md)
 
 ## Releases
 
-[Releases]([https://github.com/esp32-si4732/GNBD/releases](https://github.com/GNBD/ats-mini-dualboot/releases)) 페이지를 참고하세요.
+[Releases](https://github.com/GNBD/ats-mini-dualboot/releases) 페이지를 참고하세요.
 
 ## Documentation
 
 하드웨어, 소프트웨어, 플래시 문서는 <https://esp32-si4732.github.io/ats-mini/> 에 있습니다.
 
 
-## License
+## 라이선스 및 제3자 고지
 
-이 저장소는 기본적으로 [MIT](LICENSE)입니다 — Copyright (c) 2025 ESP32-SI4732 Radio.
+이 저장소에는 자체 작성 코드와 제3자 구성요소가 함께 포함되어 있습니다.
 
-서드파티 코드는 **전부 MIT가 아닙니다.** 특히:
+특정 파일 또는 디렉터리에 별도의 저작권·라이선스 고지가 없는 경우,
+이 저장소를 위해 작성된 원본 코드는 [MIT](LICENSE) 라이선스에 따라
+제공됩니다. 제3자 구성요소에는 각 구성요소의 별도 저작권 및
+라이선스 조건이 적용됩니다.
 
-* `Rotary.cpp` — Copyright 2011 Ben Buxton, **GPL-3.0**
-* 하드웨어 계보 — Sunnygold, **CC BY-NC-SA 3.0** (문서 참고)
-* 링크 라이브러리 (ESP32 core **LGPL-2.1**, LovyanGFX **MIT** 등)
+특히 다음 사항을 확인해야 합니다.
 
-전체 귀속: [NOTICE](NOTICE) 참고.
+* `ats-mini/Rotary.cpp` 및 `ats-mini/Rotary.h`에는 Ben Buxton의
+  로터리 엔코더 구현이 포함되어 있으며 **GPL-3.0** 조건이 적용됩니다.
+  전문: [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt)
+* 외부 라이브러리에는 MIT, LGPL 또는 기타 라이선스가 적용될 수 있습니다.
+* 하드웨어 설계, 문서 및 기타 자료에는 별도의 라이선스 조건이 적용될 수 있습니다.
+
+소스 코드, 펌웨어 바이너리, 하드웨어 파일 또는 문서를 재배포하기 전에는
+[LICENSE](LICENSE), [NOTICE](NOTICE), [LICENSES/](LICENSES/) 및 각 파일의
+라이선스 고지를 확인해야 합니다.
+
+별도로 명시하지 않는 한, 이 프로젝트는 원본 프로젝트 또는 하드웨어 설계
+저작자의 공식 제품이 아닙니다.

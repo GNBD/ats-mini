@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2011 Ben Buxton
+// SPDX-License-Identifier: GPL-3.0
 /* Rotary encoder handler for arduino. v1.1
 
    Copyright 2011 Ben Buxton. Licenced under the GNU GPL Version 3.
