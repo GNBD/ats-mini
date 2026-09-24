@@ -1,40 +1,360 @@
 Third-party notices for ATS Mini / ATS Mini dualboot
 ====================================================
 
-This repository contains original code and third-party components.
-Original code is licensed under the MIT License only where applicable.
+This repository contains original code, modified upstream code, and
+third-party components.
+
+Unless a file or directory contains a different copyright or license notice,
+original code written for this repository is provided under the MIT License.
 Third-party components retain their original copyright and license terms.
 
+This NOTICE file is provided for attribution and license transparency. It does
+not replace the license text or copyright notices of any third-party component.
 
 1. Rotary encoder implementation
 --------------------------------
 
-Files:
+The following files contain the Rotary encoder implementation attributed to
+Ben Buxton:
+
 - ats-mini/Rotary.cpp
 - ats-mini/Rotary.h
+- ats-mini-recovery/Rotary.cpp
+- ats-mini-recovery/Rotary.h
+
+If the following directory is present in a particular revision, its copies
+must also be included in this notice:
+
+- ats-mini-recovery-beta/Rotary.cpp
+- ats-mini-recovery-beta/Rotary.h
 
 Copyright:
-- Copyright 2011 Ben Buxton <bb@cactii.net>
+- Copyright 2011 Ben Buxton
+- Contact: bb@cactii.net
 
 License:
 - GNU General Public License version 3 (GPL-3.0)
 
-The copyright and license header in these files must be retained.
-These files are not relicensed under the repository MIT License.
+These files are not relicensed under the repository MIT License. The original
+copyright and license notices in these files must be retained.
 
-The complete GPL-3.0 license text is provided in:
-- LICENSES/GPL-3.0.txt
+The complete GPL-3.0 license text is available at:
 
+https://www.gnu.org/licenses/gpl-3.0.txt
 
-2. Upstream and derivative projects
------------------------------------
+When distributing firmware or other works containing this GPL-covered code,
+review and comply with the applicable GPL-3.0 requirements, including
+copyright notices, license text, source-code availability, and other
+applicable distribution obligations.
 
-The following projects are upstream references or dependencies. Their
-licenses apply only to code or materials actually copied, modified,
-linked, or redistributed with this repository:
+2. Upstream projects and firmware lineage
+-----------------------------------------
 
-- https://github.com/esp32-si4732/ats-mini
-- https://github.com/VolosR/TEmbedFMRadio
+This repository is a public fork and derivative work related to the following
+projects:
+
+- ATS Mini upstream project:
+  https://github.com/esp32-si4732/ats-mini
+
+- Volos Projects TEmbedFMRadio:
+  https://github.com/VolosR/TEmbedFMRadio
+
+- PU2CLR SI4735 Arduino Library:
+  https://github.com/pu2clr/SI4735
+
+- Ralph Xavier SI4735 port:
+  https://github.com/ralphxavier/SI4735
+
+- Goshante ATS-20 firmware:
+  https://github.com/goshante/ats20_ats_ex
+
+- G8PTN ATS_MINI:
+  https://github.com/G8PTN/ATS_MINI
+
+The applicable license for each copied or modified file is determined by the
+copyright and license notices in that file and by the license of the
+corresponding upstream project.
+
+Upstream attribution does not mean that this repository is an official
+release of any upstream project.
+
+3. Directly included or modified upstream files
+-----------------------------------------------
+
+The following files may contain code derived from or modified from upstream
+projects and must be reviewed against their original source and license
+notices:
+
+- ats-mini/SI4735-fixed.h
+- ats-mini/patch_init.h
+- Other files containing an upstream copyright or license notice
+
+The original copyright, attribution, and license notices in these files must
+be preserved.
+
+If a file does not contain a clear license notice, the applicable upstream
+license must be verified before redistribution.
+
+4. Build platform and framework components
+------------------------------------------
+
+The firmware is built for the Espressif ESP32 platform using the Arduino-ESP32
+core.
+
+Build platform:
+
+- Arduino-ESP32 core
+  Version used by this project: 3.3.11
+  Source:
+  https://github.com/espressif/arduino-esp32
+
+- ESP-IDF components bundled with or used by Arduino-ESP32
+  Version and component licenses depend on the Arduino-ESP32 distribution.
+  Source:
+  https://github.com/espressif/esp-idf
+
+Arduino-ESP32 and ESP-IDF contain multiple components with different
+copyright and license terms. Their licenses must be reviewed from the exact
+versions used to build a particular firmware release.
+
+The following framework components are used by the firmware where applicable:
+
+- WiFi
+- WebServer
+- Wire
+- LittleFS
+- FS
+- OTA and partition APIs
+- NVS APIs
+- Bluetooth/BLE/NimBLE-related ESP32 components
+
+These components are not relicensed under the MIT License of this repository.
+The applicable notices from Arduino-ESP32 and ESP-IDF remain in effect.
+
+5. External Arduino libraries
+-----------------------------
+
+The project declares or uses the following external Arduino libraries.
+
+5.1 PU2CLR SI4735 Arduino Library
+----------------------------------
+
+Library:
+- PU2CLR SI4735 Arduino Library
+
+Version used by this project:
+- 2.1.8
+
+Source:
+- https://github.com/pu2clr/SI4735
+
+License:
+- MIT, subject to verification against the exact source version used for
+  each firmware release.
+
+The copyright and license notices of the upstream library must be retained
+where its code is copied, modified, or distributed.
+
+5.2 LovyanGFX
+-------------
+
+Library:
+- LovyanGFX
+
+Version used by this project:
+- 1.2.29
+
+Source:
+- https://github.com/lovyan03/LovyanGFX
+
+License:
+- MIT, subject to verification against the exact source version used for
+  each firmware release.
+
+5.3 Async TCP
+-------------
+
+Library:
+- Async TCP
+
+Version used by this project:
+- 3.5.0
+
+The exact upstream repository and license must be verified against the
+dependency installed by the build environment for the corresponding release.
+
+This repository does not relicense Async TCP. Retain the upstream copyright
+and license notices when required.
+
+5.4 ESP Async WebServer
+-----------------------
+
+Library:
+- ESP Async WebServer
+
+Version used by this project:
+- 3.12.1
+
+The exact upstream repository and license must be verified against the
+dependency installed by the build environment for the corresponding release.
+
+This repository does not relicense ESP Async WebServer. Retain the upstream
+copyright and license notices when required.
+
+5.5 NTPClient
+-------------
+
+Library:
+- NTPClient
+
+Version used by this project:
+- 3.2.1
+
+Expected upstream project:
+- https://github.com/arduino-libraries/NTPClient
+
+The exact upstream repository, copyright notice, and license must be verified
+against the dependency installed by the build environment for the
+corresponding release.
+
+This repository does not relicense NTPClient. Retain the upstream copyright
+and license notices when required.
+
+6. File-system and storage components
+-------------------------------------
+
+The firmware uses LittleFS and Arduino FS functionality through the
+Arduino-ESP32 platform.
+
+These components may be supplied as part of Arduino-ESP32 or its associated
+platform packages. Their applicable licenses and copyright notices must be
+taken from the exact platform version used to build each release.
+
+Do not assume that every file associated with LittleFS or FS has the same
+license. Review the relevant upstream notices before redistributing binary
+firmware.
+
+7. Bluetooth and networking components
+--------------------------------------
+
+The main firmware contains Bluetooth, BLE, TCP, Wi-Fi, and web-related
+functionality.
+
+Relevant project source files include:
+
+- ats-mini/BleCentral.cpp
+- ats-mini/BleCentral.h
+- ats-mini/BleHidCentral.cpp
+- ats-mini/BleHidCentral.h
+- ats-mini/BleMode.cpp
+- ats-mini/BleMode.h
+- ats-mini/BlePeripheral.cpp
+- ats-mini/BlePeripheral.h
+- ats-mini/BleUartPeripheral.cpp
+- ats-mini/BleUartPeripheral.h
+- ats-mini/Network.cpp
+- ats-mini/Remote.cpp
+- ats-mini/TcpMode.cpp
+
+The underlying framework and protocol components may be supplied by
+Arduino-ESP32, ESP-IDF, Async TCP, ESP Async WebServer, or other dependency
+packages.
+
+The applicable license is determined by the exact dependency and version
+included in the build. These components are not relicensed under the
+repository MIT License.
+
+8. Hardware and related design materials
+-----------------------------------------
+
+Hardware designs, schematics, PCB files, images, documentation, and other
+hardware-related materials are not automatically covered by the software
+license in this repository.
+
+The related ESP32S3-SI4732 receiver hardware and software project by Sunnygold
+is referenced by this project:
+
+- https://oshwhub.com/sunnygold/esp32s3-si4732-shou-yin-ji
+
+Where materials from that project are actually copied or redistributed, the
+applicable attribution and license terms must be followed.
+
+The license identified for the related hardware and design materials is:
+
+- CC BY-NC-SA 3.0
+
+This license may require:
+
+- Attribution to the original author
+- A link to the license
+- Indication of changes
+- Non-commercial use
+- Distribution of adaptations under the same or compatible terms
+
+The MIT license for software in this repository does not grant permission to
+commercially use third-party hardware designs, images, trademarks,
+documentation, or other separately licensed materials.
+
+9. Firmware binary distribution
+--------------------------------
+
+Firmware releases may contain code linked with or derived from third-party
+components.
+
+When distributing firmware binaries, retain or provide access to the
+applicable:
+
+- Copyright notices
+- License texts
+- Third-party notices
+- Source-code information where required
+- Relinking or replacement information where required by the applicable
+  license
+
+Each firmware release should identify the source revision used to build the
+binary.
+
+The corresponding source code for a release should be available from the
+repository at the commit or tag used to build that release.
+
+10. Repository MIT license scope
+--------------------------------
+
+The repository MIT License applies only to original code in this repository
+where no different copyright or license notice is provided.
+
+A file or directory containing a different copyright or license notice is not
+relicensed under the repository MIT License.
+
+Third-party components retain their original copyright and license terms.
+
+See the repository LICENSE file for the MIT License and the applicable
+upstream license information.
+
+11. No official endorsement
+---------------------------
+
+Unless explicitly stated otherwise, this repository is not an official
+release, product, or endorsement of:
+
+- ESP32-SI4732
+- Espressif
+- Arduino
+- PU2CLR
+- LovyanGFX
+- Async TCP
+- ESP Async WebServer
+- NTPClient
+- Volos Projects
+- Ralph Xavier
+- Goshante
+- G8PTN
+- Sunnygold
+- Ben Buxton
+- Any other upstream project or copyright holder
+
+This NOTICE file is provided for attribution and license transparency. It does
+not replace the license text of any component.- https://github.com/VolosR/TEmbedFMRadio
 - https://github.com/pu2clr/SI4735
 - https://github.com/ralphxavier/SI4735
 - https://github.com/goshante/ats20_ats_ex
