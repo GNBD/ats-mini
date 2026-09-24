@@ -45,7 +45,6 @@ power on -> boot manager (ota_2) -> app0  (firmware A)
 See:
 
 * [ats-mini-recovery/README.en.md](ats-mini-recovery/README.en.md) - boot manager firmware
-* [ats-mini/bootloader.en.md](ats-mini/bootloader.en.md) - custom bootloader and how to build it
 * [ats-mini/partitions.csv](ats-mini/partitions.csv) - 16 MB partition layout
 
 ## Releases
