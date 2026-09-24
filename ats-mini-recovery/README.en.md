@@ -79,4 +79,13 @@ esptool --chip esp32s3 --port COMx write-flash 0x610000 ats-mini-recovery.ino.bi
 
 ## License
 
-MIT. See the repository `LICENSE`.
+Original code in this project is provided under the MIT License where applicable.
+
+Third-party components included in this directory or in the resulting firmware
+may be subject to GPL-3.0, LGPL, or other separate license terms.
+
+In particular, review the copyright and license notices for the rotary encoder
+implementation in the repository `NOTICE` file and the `LICENSES/` directory.
+
+Before redistributing source code or firmware binaries, review the applicable
+license terms and provide all required copyright and license notices.
