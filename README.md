@@ -70,7 +70,7 @@ ENG: [README.en.md](README.en.md)
   로터리 엔코더 구현이 포함되어 있으며 **GPL-3.0** 조건이 적용됩니다.
   전문: [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt)
 * `ats-mini/patch_init.h`의 SSB 패치 데이터는 별도 출처(Vadim Afonkin)
- 이며 라이선스가 명확하지 않습니다. 상업적 배포 전 확인 필요. [NOTICE](NOTICE) §3.1
+ 이며 라이선스가 명확하지 않습니다. [NOTICE](NOTICE) §3.1
 * 외부 라이브러리에는 MIT, LGPL 또는 기타 라이선스가 적용될 수 있습니다.
 * 하드웨어 설계(Sunnygold 등)에는 **CC BY-NC-SA 3.0**(비상업)이 적용될 수 있습니다.
   전문: [LICENSES/CC-BY-NC-SA-3.0.txt](LICENSES/CC-BY-NC-SA-3.0.txt)
