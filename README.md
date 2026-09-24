@@ -3,6 +3,8 @@
 > **⚠️ 미완성 (work in progress)** — 이 펌웨어는 아직 개발 중입니다. 크래시,
 > 부팅 실패, 데이터 손실 등이 발생할 수 있습니다. 사용에 주의하세요.
 
+ENG: [README.en.md](README.en.md)
+
 SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 
 다음 소스를 기반으로 합니다:
@@ -39,7 +41,6 @@ SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 * [ats-mini-recovery/README.md](ats-mini-recovery/README.md) - 부트 매니저 펌웨어
 * [ats-mini/partitions.csv](ats-mini/partitions.csv) - 16MB 파티션 레이아웃
 
-ENG: [README.en.md](README.en.md)
 
 ## Releases
 
