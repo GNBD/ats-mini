@@ -3,7 +3,7 @@
 > **⚠️ 미완성 (work in progress)** — 이 펌웨어는 아직 개발 중입니다. 크래시,
 > 부팅 실패, 데이터 손실 등이 발생할 수 있습니다. 사용에 주의하세요.
 
-ENG: [README.en.md](README.en.md)
+English: [README.en.md](README.en.md)
 
 SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 
