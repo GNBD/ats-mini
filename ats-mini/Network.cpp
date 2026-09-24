@@ -86,7 +86,8 @@ static const String webPage(const String &body);
 static String webNavigation(const char *activePage);
 static const String webUtcOffsetSelector();
 static const String webThemeSelector();
-static const String webRadioPage();
+static const String webStatusPage();
+static const String webRemotePage();
 static const String webMemoryPage();
 static const String webConfigPage();
 
@@ -859,18 +860,26 @@ static void apiCommand(AsyncWebServerRequest *request)
   if(cmd.length() == 0)
     return request->send(400, "application/json", "{\"error\":\"Empty cmd\"}");
 
-  // Multi-char commands: F<freq>, V<0-63>
+  // Multi-char commands: F<freqHz>, V<0-63>
   if(cmd.length() > 1 && cmd.charAt(0) == 'F')
   {
-    long freq = cmd.substring(1).toInt();
-    if(freq > 0)
+    long freqHz = cmd.substring(1).toInt();
+    if(freqHz > 0)
     {
-      uint16_t targetFreq = freq;
-      if(!isFreqInBand(getCurrentBand(), targetFreq))
+      Band *band = getCurrentBand();
+      uint16_t targetFreq = freqFromHz((uint32_t)freqHz, currentMode);
+      int targetBfo = isSSB() ? bfoFromHz((uint32_t)freqHz) : 0;
+      if(!isFreqInBand(band, targetFreq) ||
+         (isSSB() && targetFreq == band->maximumFreq && targetBfo))
         return request->send(400, "application/json", "{\"error\":\"Frequency out of band range\"}");
-      if(!updateFrequency(targetFreq))
+      if(!updateFrequency(targetFreq, false))
         return request->send(400, "application/json", "{\"error\":\"Frequency out of range\"}");
-      if(isSSB()) updateBFO(0, true);
+      if(isSSB())
+        updateBFO(targetBfo, false);
+      else if(currentBFO)
+        updateBFO(0, true);
+      clearStationInfo();
+      identifyFrequency(currentFrequency + currentBFO / 1000);
       prefsRequestSave(SAVE_SETTINGS | SAVE_CUR_BAND);
     }
   }
@@ -1138,7 +1147,54 @@ static void apiImport(AsyncWebServerRequest *request, uint8_t *data, size_t len,
 }
 
 //
-// API: Capture screen as BMP image
+// Screen mirror frame cache for delta updates
+//
+#define SCREEN_TILE 16
+
+static uint16_t *screenCache = nullptr;
+static uint16_t screenCacheW = 0;
+static uint16_t screenCacheH = 0;
+static uint32_t screenCacheHash = 0;
+
+static uint32_t screenHashPixels(const uint16_t *pixels, size_t count)
+{
+  uint32_t hash = 2166136261u;
+  for(size_t i = 0; i < count; i++)
+  {
+    hash ^= pixels[i];
+    hash *= 16777619u;
+  }
+  return hash;
+}
+
+static bool screenCacheStore(const uint16_t *pixels, uint16_t width, uint16_t height, uint32_t hash)
+{
+  size_t bytes = (size_t)width * height * sizeof(uint16_t);
+  if(screenCache && (screenCacheW != width || screenCacheH != height))
+  {
+    free(screenCache);
+    screenCache = nullptr;
+  }
+  if(!screenCache)
+    screenCache = (uint16_t *)malloc(bytes);
+  if(!screenCache) return false;
+  memcpy(screenCache, pixels, bytes);
+  screenCacheW = width;
+  screenCacheH = height;
+  screenCacheHash = hash;
+  return true;
+}
+
+static void screenReadScaled(uint16_t *pixels, uint16_t width, uint16_t height, uint16_t scale)
+{
+  size_t pos = 0;
+  for(uint16_t y = 0; y < height; y++)
+    for(uint16_t x = 0; x < width; x++)
+      pixels[pos++] = spr.readPixel(x * scale, y * scale);
+}
+
+//
+// API: Capture screen as BMP (full) or RGB565 delta (delta=1)
 //
 static void apiScreen(AsyncWebServerRequest *request)
 {
@@ -1153,63 +1209,194 @@ static void apiScreen(AsyncWebServerRequest *request)
   if(scale > 4) scale = 4;
   uint16_t width = srcW / scale;
   uint16_t height = srcH / scale;
+  size_t pixelCount = (size_t)width * height;
 
-  size_t imgSize = 14 + 40 + 12 + width * height * 2;
-  uint8_t *bmp = (uint8_t *)malloc(imgSize);
-  if(!bmp) return request->send(500, "text/plain", "Out of memory");
+  bool wantDelta = request->hasParam("delta") && request->getParam("delta")->value() == "1";
+  uint32_t reqHash = 0;
+  if(request->hasParam("h"))
+    reqHash = strtoul(request->getParam("h")->value().c_str(), nullptr, 10);
 
-  int pos = 0;
+  uint16_t *cur = (uint16_t *)malloc(pixelCount * sizeof(uint16_t));
+  if(!cur) return request->send(500, "text/plain", "Out of memory");
+  screenReadScaled(cur, width, height, scale);
+  uint32_t curHash = screenHashPixels(cur, pixelCount);
 
-  // BMP header
-  bmp[pos++] = 'B'; bmp[pos++] = 'M';
-  uint32_t fileSize = imgSize;
-  memcpy(bmp + pos, &fileSize, 4); pos += 4;
-  uint32_t reserved = 0;
-  memcpy(bmp + pos, &reserved, 4); pos += 4;
-  uint32_t dataOffset = 14 + 40 + 12;
-  memcpy(bmp + pos, &dataOffset, 4); pos += 4;
-
-  // DIB header
-  uint32_t dibSize = 40;
-  memcpy(bmp + pos, &dibSize, 4); pos += 4;
-  int32_t w = width;
-  memcpy(bmp + pos, &w, 4); pos += 4;
-  int32_t h = height;
-  memcpy(bmp + pos, &h, 4); pos += 4;
-  uint16_t planes = 1;
-  memcpy(bmp + pos, &planes, 2); pos += 2;
-  uint16_t bpp = 16;
-  memcpy(bmp + pos, &bpp, 2); pos += 2;
-  uint32_t compression = 3;
-  memcpy(bmp + pos, &compression, 4); pos += 4;
-  uint32_t imgBytes = width * height * 2;
-  memcpy(bmp + pos, &imgBytes, 4); pos += 4;
-  uint32_t xppm = 0, yppm = 0;
-  memcpy(bmp + pos, &xppm, 4); pos += 4;
-  memcpy(bmp + pos, &yppm, 4); pos += 4;
-  uint32_t colorsUsed = 0, colorsImportant = 0;
-  memcpy(bmp + pos, &colorsUsed, 4); pos += 4;
-  memcpy(bmp + pos, &colorsImportant, 4); pos += 4;
-
-  // Color masks
-  uint32_t rMask = 0xF800, gMask = 0x07E0, bMask = 0x001F;
-  memcpy(bmp + pos, &rMask, 4); pos += 4;
-  memcpy(bmp + pos, &gMask, 4); pos += 4;
-  memcpy(bmp + pos, &bMask, 4); pos += 4;
-
-  // Pixel data (bottom-up, 2x downscale)
-  for(int y = height - 1; y >= 0; y--)
-    for(int x = 0; x < width; x++)
+  if(!wantDelta)
+  {
+    size_t imgSize = 14 + 40 + 12 + pixelCount * 2;
+    uint8_t *bmp = (uint8_t *)malloc(imgSize);
+    if(!bmp)
     {
-      uint16_t pixel = spr.readPixel(x * scale, y * scale);
-      memcpy(bmp + pos, &pixel, 2);
-      pos += 2;
+      free(cur);
+      return request->send(500, "text/plain", "Out of memory");
     }
 
-  AsyncWebServerResponse *response = request->beginResponse(200, "image/bmp", bmp, imgSize);
+    int pos = 0;
+    bmp[pos++] = 'B'; bmp[pos++] = 'M';
+    uint32_t fileSize = imgSize;
+    memcpy(bmp + pos, &fileSize, 4); pos += 4;
+    uint32_t reserved = 0;
+    memcpy(bmp + pos, &reserved, 4); pos += 4;
+    uint32_t dataOffset = 14 + 40 + 12;
+    memcpy(bmp + pos, &dataOffset, 4); pos += 4;
+    uint32_t dibSize = 40;
+    memcpy(bmp + pos, &dibSize, 4); pos += 4;
+    int32_t w = width;
+    memcpy(bmp + pos, &w, 4); pos += 4;
+    int32_t h = height;
+    memcpy(bmp + pos, &h, 4); pos += 4;
+    uint16_t planes = 1;
+    memcpy(bmp + pos, &planes, 2); pos += 2;
+    uint16_t bpp = 16;
+    memcpy(bmp + pos, &bpp, 2); pos += 2;
+    uint32_t compression = 3;
+    memcpy(bmp + pos, &compression, 4); pos += 4;
+    uint32_t imgBytes = pixelCount * 2;
+    memcpy(bmp + pos, &imgBytes, 4); pos += 4;
+    uint32_t xppm = 0, yppm = 0;
+    memcpy(bmp + pos, &xppm, 4); pos += 4;
+    memcpy(bmp + pos, &yppm, 4); pos += 4;
+    uint32_t colorsUsed = 0, colorsImportant = 0;
+    memcpy(bmp + pos, &colorsUsed, 4); pos += 4;
+    memcpy(bmp + pos, &colorsImportant, 4); pos += 4;
+    uint32_t rMask = 0xF800, gMask = 0x07E0, bMask = 0x001F;
+    memcpy(bmp + pos, &rMask, 4); pos += 4;
+    memcpy(bmp + pos, &gMask, 4); pos += 4;
+    memcpy(bmp + pos, &bMask, 4); pos += 4;
+
+    for(int y = (int)height - 1; y >= 0; y--)
+      for(uint16_t x = 0; x < width; x++)
+      {
+        uint16_t pixel = cur[(size_t)y * width + x];
+        memcpy(bmp + pos, &pixel, 2);
+        pos += 2;
+      }
+
+    AsyncWebServerResponse *response = request->beginResponse(200, "image/bmp", bmp, imgSize);
+    response->addHeader("Cache-Control", "no-store");
+    request->send(response);
+    free(bmp);
+    screenCacheStore(cur, width, height, curHash);
+    free(cur);
+    return;
+  }
+
+  // Delta mode: 'S', flags (bit0=full), width, height, ...
+  bool cacheOk = screenCache && screenCacheW == width && screenCacheH == height &&
+                 reqHash != 0 && screenCacheHash == reqHash;
+
+  uint16_t cols = (width + SCREEN_TILE - 1) / SCREEN_TILE;
+  uint16_t rows = (height + SCREEN_TILE - 1) / SCREEN_TILE;
+  size_t maxTiles = (size_t)cols * rows;
+  uint16_t *dirty = cacheOk ? (uint16_t *)malloc(maxTiles * sizeof(uint16_t)) : nullptr;
+  uint16_t tileCount = 0;
+  size_t deltaBytes = 0;
+
+  if(dirty)
+  {
+    for(uint16_t ty = 0; ty < rows; ty++)
+      for(uint16_t tx = 0; tx < cols; tx++)
+      {
+        uint16_t x0 = tx * SCREEN_TILE;
+        uint16_t y0 = ty * SCREEN_TILE;
+        uint16_t tw = (uint16_t)((x0 + SCREEN_TILE <= width) ? SCREEN_TILE : width - x0);
+        uint16_t th = (uint16_t)((y0 + SCREEN_TILE <= height) ? SCREEN_TILE : height - y0);
+        bool changed = false;
+        for(uint16_t y = 0; y < th && !changed; y++)
+        {
+          size_t row = (size_t)(y0 + y) * width + x0;
+          for(uint16_t x = 0; x < tw; x++)
+          {
+            if(cur[row + x] != screenCache[row + x])
+            {
+              changed = true;
+              break;
+            }
+          }
+        }
+        if(changed)
+        {
+          dirty[tileCount++] = (uint16_t)(ty * cols + tx);
+          deltaBytes += 8 + (size_t)tw * th * 2;
+        }
+      }
+    // Too many tiles: cheaper to send the full frame
+    if(deltaBytes >= pixelCount * 2)
+    {
+      free(dirty);
+      dirty = nullptr;
+      tileCount = 0;
+    }
+  }
+
+  bool sendFull = !cacheOk || !dirty || tileCount == 0;
+  // tileCount==0 means the frame matches cache; still send a tiny ack with flags=0 and 0 tiles
+  if(cacheOk && dirty && tileCount == 0)
+    sendFull = false;
+
+  // Build response
+  size_t header = 6;
+  size_t respSize;
+  if(sendFull)
+    respSize = header + pixelCount * 2;
+  else if(tileCount == 0)
+    respSize = header + 2;
+  else
+    respSize = header + 2 + deltaBytes;
+
+  uint8_t *resp = (uint8_t *)malloc(respSize);
+  if(!resp)
+  {
+    if(dirty) free(dirty);
+    free(cur);
+    return request->send(500, "text/plain", "Out of memory");
+  }
+
+  resp[0] = 'S';
+  resp[1] = sendFull ? 1 : 0;
+  memcpy(resp + 2, &width, 2);
+  memcpy(resp + 4, &height, 2);
+  size_t pos = header;
+
+  if(sendFull)
+  {
+    memcpy(resp + pos, cur, pixelCount * 2);
+    pos += pixelCount * 2;
+  }
+  else
+  {
+    memcpy(resp + pos, &tileCount, 2);
+    pos += 2;
+    for(uint16_t i = 0; i < tileCount; i++)
+    {
+      uint16_t idx = dirty[i];
+      uint16_t tx = idx % cols;
+      uint16_t ty = idx / cols;
+      uint16_t x0 = tx * SCREEN_TILE;
+      uint16_t y0 = ty * SCREEN_TILE;
+      uint16_t tw = (uint16_t)((x0 + SCREEN_TILE <= width) ? SCREEN_TILE : width - x0);
+      uint16_t th = (uint16_t)((y0 + SCREEN_TILE <= height) ? SCREEN_TILE : height - y0);
+      memcpy(resp + pos, &x0, 2); pos += 2;
+      memcpy(resp + pos, &y0, 2); pos += 2;
+      memcpy(resp + pos, &tw, 2); pos += 2;
+      memcpy(resp + pos, &th, 2); pos += 2;
+      for(uint16_t y = 0; y < th; y++)
+      {
+        size_t src = (size_t)(y0 + y) * width + x0;
+        memcpy(resp + pos, cur + src, (size_t)tw * 2);
+        pos += (size_t)tw * 2;
+      }
+    }
+  }
+
+  if(dirty) free(dirty);
+  screenCacheStore(cur, width, height, curHash);
+  free(cur);
+
+  AsyncWebServerResponse *response = request->beginResponse(200, "application/octet-stream", resp, respSize);
   response->addHeader("Cache-Control", "no-store");
   request->send(response);
-  free(bmp);
+  free(resp);
 }
 
 //
@@ -1218,7 +1405,12 @@ static void apiScreen(AsyncWebServerRequest *request)
 static void webInit()
 {
   server.on("/", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    request->send(200, "text/html", webRadioPage());
+    request->send(200, "text/html", webStatusPage());
+  });
+
+  server.on("/remote", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    if(!webIsAuthenticated(request)) return request->requestAuthentication();
+    request->send(200, "text/html", webRemotePage());
   });
 
   server.on("/memory", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -1559,6 +1751,7 @@ static String webNavigation(const char *activePage)
   static const struct { const char *name; const char *path; } pages[] =
   {
     {"Status", "/"},
+    {"Remote", "/remote"},
     {"Memory", "/memory"},
     {"Config", "/config"},
     {"Update", "/update"},
@@ -1629,19 +1822,28 @@ static const String webThemeSelector()
   return(result);
 }
 
-static const String webRadioPage()
+static void webNetInfo(String &ip, String &ssid)
 {
-  String ip = "";
-  String ssid = "";
+  if(WiFi.status()==WL_CONNECTED)
+  {
+    ip = WiFi.localIP().toString();
+    ssid = WiFi.SSID();
+  }
+  else
+  {
+    ip = WiFi.softAPIP().toString();
+    ssid = String(apSSID);
+  }
+}
+
+static String webReceiverTime()
+{
   String receiverTime = "Not synchronized";
   int offsetMinutes = getCurrentUTCOffset() * 15;
   int offsetMagnitude = abs(offsetMinutes);
   char utcOffset[10];
   snprintf(utcOffset, sizeof(utcOffset), "UTC%c%02d:%02d",
            offsetMinutes < 0? '-' : '+', offsetMagnitude / 60, offsetMagnitude % 60);
-  String freq = currentMode == FM?
-    String(currentFrequency / 100.0) + "MHz "
-  : String(currentFrequency + currentBFO / 1000.0) + "kHz ";
 
   if(clockAvailable())
   {
@@ -1658,29 +1860,72 @@ static const String webRadioPage()
   }
 
   receiverTime += " (" + String(utcOffset) + ")";
+  return receiverTime;
+}
 
-  if(WiFi.status()==WL_CONNECTED)
-  {
-    ip = WiFi.localIP().toString();
-    ssid = WiFi.SSID();
-  }
-  else
-  {
-    ip = WiFi.softAPIP().toString();
-    ssid = String(apSSID);
-  }
+static const String webStatusPage()
+{
+  String ip, ssid;
+  webNetInfo(ip, ssid);
+  String freq = currentMode == FM?
+    String(currentFrequency / 100.0) + "MHz "
+  : String(currentFrequency + currentBFO / 1000.0) + "kHz ";
 
   String body = "<DIV CLASS='CONTAINER'>"
     "<H1>ATS-Mini</H1>" + webNavigation("/") +
 
-    // Screen capture with quality selector
+    "<TABLE>"
+    "<TR><TD CLASS='LABEL'>Band</TD><TD>"
+    + String(getCurrentBand()->bandName) + "</TD></TR>"
+    "<TR><TD CLASS='LABEL'>Freq</TD><TD>"
+    + freq + " <SMALL>" + String(bandModeDesc[currentMode]) + "</SMALL></TD></TR>"
+    "<TR><TD CLASS='LABEL'>Signal</TD><TD>"
+    + String(rssi) + "dBuV SNR " + String(snr) + "dB</TD></TR>"
+    "<TR><TD CLASS='LABEL'>Vol</TD><TD>" + String(volume) + "/63</TD></TR>"
+    "<TR><TD CLASS='LABEL'>Bat</TD><TD>" + String(batteryMonitor(), 2) + "V</TD></TR>"
+    "<TR><TD CLASS='LABEL'>FW</TD><TD>" + String(getVersion(true)) + "</TD></TR>"
+    "<TR><TD CLASS='LABEL'>Time</TD><TD>" + webReceiverTime() + "</TD></TR>"
+    "<TR><TD CLASS='LABEL'>Network</TD><TD>" + ssid + " (" + ip + ")</TD></TR>"
+    "</TABLE>"
+
+    "</DIV>";
+
+  return webPage(body);
+}
+
+static const String webRemotePage()
+{
+  String freq = currentMode == FM?
+    String(currentFrequency / 100.0)
+  : String(currentFrequency + currentBFO / 1000.0);
+  const char *unit = currentMode == FM? "MHz" : "kHz";
+
+  String body = "<DIV CLASS='CONTAINER'>"
+    "<H1>Remote</H1>" + webNavigation("/remote") +
+
     "<DIV CLASS='CENTER' STYLE='margin-bottom:8px;'>"
     "<BUTTON CLASS='btn-q active' ONCLICK='setQ(1)' ID='q1'>HIGH</button>"
     "<BUTTON CLASS='btn-q' ONCLICK='setQ(2)' ID='q2'>MED</button>"
     "<BUTTON CLASS='btn-q' ONCLICK='setQ(3)' ID='q3'>LOW</button>"
     "</DIV>"
     "<DIV CLASS='CENTER' STYLE='margin-bottom:16px;'>"
-    "<IMG ID='screen' SRC='/api/screen' STYLE='max-width:240px;width:100%;border-radius:8px;border:1px solid #eee;'>"
+    "<CANVAS ID='screen' STYLE='max-width:240px;width:100%;border-radius:8px;"
+    "border:1px solid #eee;background:#000;image-rendering:pixelated;'></CANVAS>"
+    "</DIV>"
+
+    // Direct frequency entry
+    "<DIV CLASS='tuner'>"
+    "<INPUT TYPE='TEXT' ID='f' INPUTMODE='DECIMAL' AUTOCOMPLETE='off' "
+    "PLACEHOLDER='" + String(freq) + "' "
+    "ONKEYPRESS=\"if(event.key==='Enter')goFreq();\">"
+    "<SPAN CLASS='unit' ID='fu'>" + String(unit) + "</SPAN>"
+    "<BUTTON CLASS='btn-go' ONCLICK='goFreq()'>GO</BUTTON>"
+    "</DIV>"
+    "<DIV CLASS='CENTER'><SMALL ID='err' STYLE='color:#c00;'></SMALL></DIV>"
+    "<DIV CLASS='CENTER' STYLE='margin:8px 0 12px;'>"
+    "<SPAN CLASS='rstat' ID='rfreq'>" + String(freq) + " " + String(unit) + "</SPAN>"
+    " <SMALL ID='rmode'>" + String(bandModeDesc[currentMode]) + "</SMALL>"
+    " &middot; <SPAN CLASS='rstat' ID='rvol'>" + String(volume) + "/63</SPAN>"
     "</DIV>"
 
     // 3-button control
@@ -1699,19 +1944,14 @@ static const String webRadioPage()
     "<BUTTON CLASS='btn-sm' ONCLICK='cmd(\"M\")'>M+</BUTTON>"
     "</DIV>"
 
-    // Status info
     "<TABLE>"
     "<TR><TD CLASS='LABEL'>Band</TD><TD ID='band'>"
     + String(getCurrentBand()->bandName) + "</TD></TR>"
-    "<TR><TD CLASS='LABEL'>Freq</TD><TD ID='freq'>"
-    + freq + " <SMALL>" + String(bandModeDesc[currentMode]) + "</SMALL></TD></TR>"
     "<TR><TD CLASS='LABEL'>Signal</TD><TD>"
     "<DIV CLASS='sbar'><DIV CLASS='sfill' ID='sf' STYLE='width:"
     + String(constrain(rssi * 100 / 120, 5, 100)) + "%'></DIV></DIV>"
     + String(rssi) + "dBuV SNR " + String(snr) + "dB</TD></TR>"
     "<TR><TD CLASS='LABEL'>Vol</TD><TD ID='vol'>" + String(volume) + "/63</TD></TR>"
-    "<TR><TD CLASS='LABEL'>Bat</TD><TD>" + String(batteryMonitor(), 2) + "V</TD></TR>"
-    "<TR><TD CLASS='LABEL'>FW</TD><TD>" + String(getVersion(true)) + "</TD></TR>"
     "</TABLE>"
 
     "</DIV>"
@@ -1730,29 +1970,95 @@ static const String webRadioPage()
     ".btn-q{padding:4px 12px;border:1px solid #ddd;border-radius:6px;"
     "background:#fafafa;color:#888;font-size:11px;cursor:pointer;margin:0 2px;}"
     ".btn-q.active{background:#111;color:#fff;border-color:#111;}"
+    ".tuner{display:flex;align-items:center;gap:8px;margin-bottom:4px;}"
+    ".tuner INPUT{flex:1;min-width:0;padding:10px 12px;border:1px solid #ddd;"
+    "border-radius:8px;font-size:0.9rem;background:#fafafa;}"
+    ".tuner .unit{color:#888;font-size:0.85rem;min-width:28px;}"
+    ".btn-go{padding:10px 18px;border:none;border-radius:8px;background:#111;"
+    "color:#fff;font-weight:600;cursor:pointer;}"
+    ".rstat{font-weight:600;}"
     "</STYLE>"
 
     "<SCRIPT>"
-    "var qs=1;"
+    "var qs=1,curMode='" + String(bandModeDesc[currentMode]) + "';"
+    "var prevPx=null,prevW=0,prevH=0,busy=false;"
+    "var cvs=document.getElementById('screen');"
+    "var ctx=cvs.getContext('2d');"
+    "function hashPx(a){"
+    "var h=2166136261;"
+    "for(var i=0;i<a.length;i++){h^=a[i];h=Math.imul(h,16777619)>>>0;}"
+    "return h>>>0;}"
+    "function toRGBA(p,d,o){"
+    "var r=(p>>11)&31,g=(p>>5)&63,b=p&31;"
+    "d[o]=(r<<3)|(r>>2);d[o+1]=(g<<2)|(g>>4);d[o+2]=(b<<3)|(b>>2);d[o+3]=255;}"
     "function setQ(s){"
-    "qs=s;"
+    "qs=s;prevPx=null;"
     "document.querySelectorAll('.btn-q').forEach(function(b){b.classList.remove('active');});"
     "document.getElementById('q'+s).classList.add('active');"
     "updateScreen();}"
+    "function showErr(m){document.getElementById('err').textContent=m||'';}"
     "function cmd(c){"
-    "fetch('/api/cmd',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'cmd='+c})"
-    ".then(function(){refresh();updateScreen();});}"
+    "showErr('');"
+    "fetch('/api/cmd',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},"
+    "body:'cmd='+encodeURIComponent(c)})"
+    ".then(function(r){return r.json().then(function(d){"
+    "if(!r.ok||d.error){showErr(d.error||'Error');return;}"
+    "refresh();updateScreen();});})"
+    ".catch(function(){showErr('Network error');});}"
+    "function goFreq(){"
+    "var el=document.getElementById('f');"
+    "var v=parseFloat(el.value);"
+    "if(!(v>0)){showErr('Enter a frequency');return;}"
+    "var hz=(curMode==='FM')?Math.round(v*1e6):Math.round(v*1000);"
+    "cmd('F'+hz);}"
     "function refresh(){"
     "fetch('/api/status').then(function(r){return r.json();}).then(function(d){"
+    "curMode=d.mode;"
     "document.getElementById('band').textContent=d.band;"
-    "document.getElementById('freq').innerHTML=d.frequency+'<SMALL>'+d.mode+'</SMALL>';"
     "document.getElementById('vol').textContent=d.volume+'/63';"
+    "document.getElementById('rvol').textContent=d.volume+'/63';"
+    "document.getElementById('rmode').textContent=d.mode;"
+    "document.getElementById('rfreq').textContent=d.frequency+' '+((d.mode==='FM')?'MHz':'kHz');"
+    "document.getElementById('fu').textContent=(d.mode==='FM')?'MHz':'kHz';"
     "var w=Math.min(Math.max(d.rssi*100/120,5),100);"
     "document.getElementById('sf').style.width=w+'%';"
     "});}"
     "function updateScreen(){"
-    "var img=document.getElementById('screen');"
-    "img.src='/api/screen?scale='+qs+'&t='+Date.now();}"
+    "if(busy)return;busy=true;"
+    "var h=prevPx?hashPx(prevPx):0;"
+    "fetch('/api/screen?scale='+qs+'&delta=1&h='+h+'&t='+Date.now())"
+    ".then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();})"
+    ".then(function(buf){"
+    "var v=new DataView(buf);"
+    "if(v.byteLength<6||v.getUint8(0)!==0x53){busy=false;return;}"
+    "var flags=v.getUint8(1);"
+    "var w=v.getUint16(2,true),hh=v.getUint16(4,true);"
+    "var off=6;"
+    "if(cvs.width!==w||cvs.height!==hh){"
+    "if(!(flags&1)){busy=false;prevPx=null;return;}"
+    "cvs.width=w;cvs.height=hh;}"
+    "if(flags&1){"
+    "prevPx=new Uint16Array(w*hh);"
+    "var img=ctx.createImageData(w,hh);"
+    "for(var i=0;i<w*hh;i++){"
+    "var p=v.getUint16(off,true);off+=2;prevPx[i]=p;toRGBA(p,img.data,i*4);}"
+    "ctx.putImageData(img,0,0);"
+    "}else{"
+    "if(!prevPx||prevPx.length!==w*hh){busy=false;prevPx=null;return;}"
+    "var n=v.getUint16(off,true);off+=2;"
+    "for(var t=0;t<n;t++){"
+    "var x=v.getUint16(off,true),y=v.getUint16(off+2,true);"
+    "var tw=v.getUint16(off+4,true),th=v.getUint16(off+6,true);off+=8;"
+    "var img=ctx.createImageData(tw,th);"
+    "for(var j=0;j<tw*th;j++){"
+    "var p=v.getUint16(off,true);off+=2;"
+    "prevPx[(y+((j/tw)|0))*w+x+(j%tw)]=p;"
+    "toRGBA(p,img.data,j*4);}"
+    "ctx.putImageData(img,x,y);"
+    "}}"
+    "busy=false;})"
+    ".catch(function(){busy=false;});}"
+    "refresh();updateScreen();"
     "setInterval(refresh,1000);"
     "setInterval(updateScreen,2000);"
     "</SCRIPT>";

@@ -1,0 +1,2 @@
+Web interface gains a dedicated Remote page: screen mirror, button pad, and direct frequency entry (Go).
+Screen mirror now sends only changed regions between frames instead of a full capture every refresh.

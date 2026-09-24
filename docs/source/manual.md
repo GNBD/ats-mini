@@ -95,6 +95,7 @@ The Wi-Fi mode (2.4GHz only) can be used for the following purposes (for now):
 * Download the EiBi shortwave schedule.
 * Control the receiver over [TCP](remote.md#tcp-over-wi-fi).
 * Viewing the receiver status (date/time and UTC offset, frequency, RSSI/SNR, volume, battery voltage, etc).
+* Remote control: mirror the screen, press the front-panel buttons, and tune to an entered frequency on the **Remote** page.
 * Viewing the Memory slots with saved frequencies.
 * Manage the receiver settings.
 * Upload or delete an optional splash image shown when the receiver starts.

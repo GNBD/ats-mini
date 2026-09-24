@@ -1,0 +1,3 @@
+Wi-Fi Scan menu now lists nearby networks; select one, enter the password on the keypad, and connect.
+If Wi-Fi is off, Wi-Fi Scan shows a confirmation popup instead of starting a scan.
+Default Wi-Fi TX power is 14 dBm to reduce supply voltage spikes when the radio starts.

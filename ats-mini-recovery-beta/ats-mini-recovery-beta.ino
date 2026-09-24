@@ -48,7 +48,7 @@ static constexpr const lgfx::IFont* FONT_TINY  = &lgfx::fonts::Font0;
 #define COL_KEY     0x1082
 #define COL_KEYSEL  0xFFFF
 
-#define RECOVERY_VERSION "2.0.0-beta"
+#define RECOVERY_VERSION "2.0.1"
 
 // Default: fetch this .txt (one URL per line). Local /update_url.txt and
 // DEFAULT_UPDATE_URLS are fallbacks when the remote list is unavailable.
@@ -59,8 +59,11 @@ static const char *DEFAULT_UPDATE_URLS[MAX_URLS] = {};
 
 LGFX tft;
 WebServer server(80);
-Rotary encoder(ENCODER_PIN_A, ENCODER_PIN_B, true);
+Rotary encoder(ENCODER_PIN_B, ENCODER_PIN_A, false);
 Preferences prefs;
+
+static volatile int16_t encoderCount = 0;
+static volatile int16_t encoderCountAccel = 0;
 
 static String apIP;
 static bool apModeActive = false;
@@ -89,15 +92,66 @@ static const char *wifiMenu[] = {
 // Input helpers
 // ---------------------------------------------------------------------------
 
-static int8_t readEncoder()
+static int16_t accelerateEncoder(int8_t dir)
 {
-  static unsigned char last = DIR_NONE;
-  unsigned char dir = encoder.process();
-  if(dir == last) return 0;
-  last = dir;
-  if(dir == DIR_CW) return -1;
-  if(dir == DIR_CCW) return 1;
-  return 0;
+  const uint32_t speedThresholds[] = {350, 60, 45, 35, 25};
+  const uint16_t accelFactors[] =      {1,  2,  4,  8, 16};
+  static uint32_t lastEncoderTime = 0;
+  static uint32_t lastSpeed = speedThresholds[0];
+  static uint16_t lastAccelFactor = accelFactors[0];
+  static int8_t lastEncoderDir = 0;
+
+  uint32_t currentTime = millis();
+  lastSpeed = ((currentTime - lastEncoderTime) * 7 + lastSpeed * 3) / 10;
+
+  if(lastSpeed > speedThresholds[0] || lastEncoderDir != dir)
+  {
+    lastSpeed = speedThresholds[0];
+    lastAccelFactor = accelFactors[0];
+  }
+  else
+  {
+    for(int8_t i = 4; i >= 0; i--)
+    {
+      if(lastSpeed <= speedThresholds[i] && lastAccelFactor < accelFactors[i])
+      {
+        lastAccelFactor = accelFactors[i];
+        break;
+      }
+    }
+  }
+  lastEncoderTime = currentTime;
+  lastEncoderDir = dir;
+  return dir * lastAccelFactor;
+}
+
+static void IRAM_ATTR rotaryEncoderISR()
+{
+  uint8_t encoderStatus = encoder.process();
+  if(encoderStatus)
+  {
+    int8_t delta = encoderStatus == DIR_CW ? 1 : -1;
+    int16_t accelDelta = accelerateEncoder(delta);
+    if(abs(encoderCount) < 5)
+    {
+      encoderCount += delta;
+      encoderCountAccel += accelDelta;
+    }
+  }
+}
+
+// accel=true: menus (main feel). accel=false: keyboard (raw steps).
+static int8_t readEncoder(bool accel = true)
+{
+  int16_t c;
+  noInterrupts();
+  c = accel ? encoderCountAccel : encoderCount;
+  encoderCount = 0;
+  encoderCountAccel = 0;
+  interrupts();
+  if(c > 127) c = 127;
+  if(c < -127) c = -127;
+  return (int8_t)c;
 }
 
 static uint32_t readButton()
@@ -430,14 +484,10 @@ static int runChoice(const char *title, const char *hint,
   while(true)
   {
     int8_t d = readEncoder();
-    if(d > 0)
+    if(d)
     {
-      selected = (selected + 1) % itemCount;
-      drawChoiceList(title, hint, items, itemCount, selected);
-    }
-    else if(d < 0)
-    {
-      selected = (selected + itemCount - 1) % itemCount;
+      selected = (selected + d) % itemCount;
+      if(selected < 0) selected += itemCount;
       drawChoiceList(title, hint, items, itemCount, selected);
     }
 
@@ -892,16 +942,10 @@ static void runFirmwareUpdate()
   while(true)
   {
     int8_t fd = readEncoder();
-    if(fd > 0)
+    if(fd)
     {
-      fileSel++;
-      if(fileSel >= fileCount) fileSel = 0;
-      drawFilePage(files, fileCount, fileSel, slotNames[slotSel]);
-    }
-    else if(fd < 0)
-    {
-      fileSel--;
-      if(fileSel < 0) fileSel = fileCount - 1;
+      fileSel = (fileSel + fd) % fileCount;
+      if(fileSel < 0) fileSel += fileCount;
       drawFilePage(files, fileCount, fileSel, slotNames[slotSel]);
     }
 
@@ -1007,14 +1051,10 @@ static void eraseMenu()
   while(true)
   {
     int8_t d = readEncoder();
-    if(d > 0)
+    if(d)
     {
-      selected = (selected + 1) % (int)RESET_ITEM_COUNT;
-      drawResetMenu(checked, selected);
-    }
-    else if(d < 0)
-    {
-      selected = (selected + (int)RESET_ITEM_COUNT - 1) % (int)RESET_ITEM_COUNT;
+      selected = (selected + d) % (int)RESET_ITEM_COUNT;
+      if(selected < 0) selected += (int)RESET_ITEM_COUNT;
       drawResetMenu(checked, selected);
     }
 
@@ -1255,20 +1295,9 @@ static void drawWifiSetting(int *nets, int netCount, int selected,
 
 static int kbHandleEncoder(int8_t d)
 {
-  if(kbKeyCount == 0) return 0;
-  if(d > 0)
-  {
-    kbCursor++;
-    if(kbCursor >= kbKeyCount) kbCursor = 0;
-    return 1;
-  }
-  if(d < 0)
-  {
-    kbCursor--;
-    if(kbCursor < 0) kbCursor = kbKeyCount - 1;
-    return 1;
-  }
-  return 0;
+  if(kbKeyCount == 0 || d == 0) return 0;
+  kbCursor = ((kbCursor + d) % kbKeyCount + kbKeyCount) % kbKeyCount;
+  return 1;
 }
 
 static void runWifiSetting()
@@ -1304,20 +1333,11 @@ static void runWifiSetting()
     if(!kbOpen)
     {
       int8_t d = readEncoder();
-      if(netCount > 0)
+      if(netCount > 0 && d)
       {
-        if(d > 0)
-        {
-          selected++;
-          if(selected >= netCount) selected = 0;
-          redraw();
-        }
-        else if(d < 0)
-        {
-          selected--;
-          if(selected < 0) selected = netCount - 1;
-          redraw();
-        }
+        selected = (selected + d) % netCount;
+        if(selected < 0) selected += netCount;
+        redraw();
       }
 
       uint32_t h = readButton();
@@ -1364,7 +1384,7 @@ static void runWifiSetting()
     }
     else
     {
-      int8_t d = readEncoder();
+      int8_t d = readEncoder(false);
       if(kbHandleEncoder(d)) redraw();
 
       uint32_t h = readButton();
@@ -1584,10 +1604,10 @@ static void runFileManager()
 }
 
 // ---------------------------------------------------------------------------
-// About (4 pages)
+// About (5 pages)
 // ---------------------------------------------------------------------------
 
-#define ABOUT_PAGES 4
+#define ABOUT_PAGES 5
 
 static void displayQRCode(esp_qrcode_handle_t qrcode)
 {
@@ -1605,12 +1625,9 @@ static void displayQRCode(esp_qrcode_handle_t qrcode)
 
 static void drawAboutFooter(int page)
 {
-  tft.setTextDatum(TL_DATUM);
-  tft.setTextColor(COL_MUTED, COL_BG);
-  char buf[24];
-  snprintf(buf, sizeof(buf), "Page %d/%d", page + 1, ABOUT_PAGES);
-  tft.drawString(buf, 8, 153, FONT_SMALL);
+  if(page != 0) return;
   tft.setTextDatum(TR_DATUM);
+  tft.setTextColor(COL_MUTED, COL_BG);
   tft.drawString("Rotate=Page Hold=Back", 312, 153, FONT_SMALL);
   tft.setTextDatum(TL_DATUM);
 }
@@ -1630,30 +1647,44 @@ static void drawAboutPage(int page)
       tft.setTextDatum(TL_DATUM);
       esp_qrcode_config_t cfg = ESP_QRCODE_CONFIG_DEFAULT();
       cfg.display_func = displayQRCode;
-      esp_qrcode_generate(&cfg, "https://github.com/GNBD/ats-mini");
+      esp_qrcode_generate(&cfg, "https://github.com/GNBD/ats-mini-dualboot");
       tft.setTextColor(COL_TEXT, COL_BG);
-      tft.drawString("GitHub", 120, 48, FONT_SMALL);
+      tft.drawString("GitHub", 120, 58, FONT_SMALL);
       tft.setTextColor(COL_MUTED, COL_BG);
-      tft.drawString("github.com/", 120, 68, FONT_SMALL);
-      tft.drawString("GNBD/ats-mini", 120, 86, FONT_SMALL);
-      tft.drawString("Scan for source", 120, 112, FONT_SMALL);
-      tft.drawString("and releases.", 120, 130, FONT_SMALL);
+      tft.drawString("github.com/", 120, 76, FONT_SMALL);
+      tft.drawString("GNBD/ats-mini-", 120, 94, FONT_SMALL);
+      tft.drawString("dualboot", 120, 112, FONT_SMALL);
+      tft.drawString("Scan for source", 120, 134, FONT_SMALL);
       break;
     }
     case 1:
     {
       tft.setTextColor(COL_TEXT, COL_BG);
-      tft.drawString("Libraries / Licenses", 8, 38, FONT_SMALL);
+      tft.drawString("Libraries", 8, 38, FONT_SMALL);
       tft.setTextColor(COL_MUTED, COL_BG);
       tft.drawString("LovyanGFX     MIT", 8, 56, FONT_SMALL);
       tft.drawString("ESP32 Core    LGPL-2.1", 8, 72, FONT_SMALL);
       tft.drawString("ESP-IDF       Apache-2.0", 8, 88, FONT_SMALL);
       tft.drawString("LittleFS      MIT", 8, 104, FONT_SMALL);
-      tft.drawString("Upstream: esp32-si4732", 8, 126, FONT_SMALL);
-      tft.drawString("Fork: GNBD/ats-mini", 8, 142, FONT_SMALL);
+      tft.drawString("Async TCP     LGPL-3.0", 8, 120, FONT_SMALL);
+      tft.drawString("PU2CLR        MIT", 8, 136, FONT_SMALL);
       break;
     }
     case 2:
+    {
+      tft.setTextColor(COL_TEXT, COL_BG);
+      tft.drawString("License", 8, 38, FONT_SMALL);
+      tft.setTextColor(COL_MUTED, COL_BG);
+      tft.drawString("Original code: MIT", 8, 56, FONT_SMALL);
+      tft.drawString("Rotary.cpp/h: GPL-3.0", 8, 72, FONT_SMALL);
+      tft.drawString("  Ben Buxton 2011", 8, 88, FONT_SMALL);
+      tft.drawString("Libraries: see page 2", 8, 104, FONT_SMALL);
+      tft.drawString("Hardware: CC BY-NC-SA", 8, 120, FONT_SMALL);
+      tft.drawString("  may apply separately", 8, 136, FONT_SMALL);
+      tft.drawString("See repo NOTICE + LICENSES", 8, 152, FONT_SMALL);
+      break;
+    }
+    case 3:
     {
       tft.setTextColor(COL_TEXT, COL_BG);
       tft.drawString("Recovery Help", 8, 38, FONT_SMALL);
@@ -1672,7 +1703,7 @@ static void drawAboutPage(int page)
       tft.drawString("this screen", 110, 134, FONT_SMALL);
       break;
     }
-    case 3:
+    case 4:
     {
       tft.setTextColor(COL_TEXT, COL_BG);
       tft.drawString("Flash Help (esptool)", 8, 38, FONT_SMALL);
@@ -1699,14 +1730,10 @@ static void runAbout()
   while(true)
   {
     int8_t d = readEncoder();
-    if(d > 0)
+    if(d)
     {
-      page = (page + 1) % ABOUT_PAGES;
-      drawAboutPage(page);
-    }
-    else if(d < 0)
-    {
-      page = (page + ABOUT_PAGES - 1) % ABOUT_PAGES;
+      page = (page + d) % ABOUT_PAGES;
+      if(page < 0) page += ABOUT_PAGES;
       drawAboutPage(page);
     }
 
@@ -1733,14 +1760,10 @@ static void runWifiMenu()
   while(true)
   {
     int8_t dir = readEncoder();
-    if(dir > 0)
+    if(dir)
     {
-      selected = (selected + 1) % WIFI_MENU_COUNT;
-      drawWifiMenu(selected);
-    }
-    else if(dir < 0)
-    {
-      selected = (selected + WIFI_MENU_COUNT - 1) % WIFI_MENU_COUNT;
+      selected = (selected + dir) % WIFI_MENU_COUNT;
+      if(selected < 0) selected += WIFI_MENU_COUNT;
       drawWifiMenu(selected);
     }
 
@@ -1771,14 +1794,10 @@ static void runRecoveryMenu()
   while(true)
   {
     int8_t dir = readEncoder();
-    if(dir > 0)
+    if(dir)
     {
-      selected = (selected + 1) % MENU_COUNT;
-      drawMenu(selected);
-    }
-    else if(dir < 0)
-    {
-      selected = (selected + MENU_COUNT - 1) % MENU_COUNT;
+      selected = (selected + dir) % MENU_COUNT;
+      if(selected < 0) selected += MENU_COUNT;
       drawMenu(selected);
     }
 
@@ -1841,6 +1860,8 @@ void setup()
   pinMode(ENCODER_PIN_A, INPUT_PULLUP);
   pinMode(ENCODER_PIN_B, INPUT_PULLUP);
   pinMode(ENCODER_PUSH_BUTTON, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), rotaryEncoderISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_B), rotaryEncoderISR, CHANGE);
 
   ledcAttach(PIN_LCD_BL, 16000, 8);
   ledcWrite(PIN_LCD_BL, 0);
