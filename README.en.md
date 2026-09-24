@@ -18,7 +18,8 @@ Based on the following sources:
 
 ## dual-boot (this fork)
 
-<img width="885" height="567" alt="image" src="https://github.com/user-attachments/assets/6eb3712e-d888-4019-a894-e673520c0385" />
+<img width="657" height="350" alt="image" src="https://github.com/user-attachments/assets/57f89dcb-ddf6-4baa-b854-d4935b872c86" />
+
 
 
 > **Hardware: ESP32-S3 N16R8 only.** This fork has been tested only on modules
