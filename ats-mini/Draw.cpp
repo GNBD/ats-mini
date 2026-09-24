@@ -69,17 +69,17 @@ void drawWiFiIndicator(int x, int y)
 }
 
 //
-// Draw network status
+// Draw operation status
 //
-bool drawWiFiStatus(const char *statusLine1, const char *statusLine2, int x, int y)
+bool drawStatus(int x, int y)
 {
-  if(statusLine1 || statusLine2)
+  if(statusLines[0][0] || statusLines[1][0])
   {
-    // Draw two lines of network status
+    // Draw two lines of operation status
     spr.setTextDatum(TC_DATUM);
     spr.setTextColor(TH.rds_text);
-    if(statusLine1) spr.drawString(statusLine1, x, y, FONT_SMALL);
-    if(statusLine2) spr.drawString(statusLine2, x, y+17, FONT_SMALL);
+    spr.drawString(statusLines[0], x, y, FONT_SMALL);
+    spr.drawString(statusLines[1], x, y+17, FONT_SMALL);
     return(true);
   }
 
@@ -427,7 +427,7 @@ void drawScanGraphs(uint32_t freq)
 //
 // Draw screen according to given command
 //
-void drawScreen(const char *statusLine1, const char *statusLine2)
+void drawScreen()
 {
   if(sleepOn()) return;
 
@@ -444,10 +444,10 @@ void drawScreen(const char *statusLine1, const char *statusLine2)
   switch(uiLayoutIdx)
   {
     case UI_SMETER:
-      drawLayoutSmeter(statusLine1, statusLine2);
+      drawLayoutSmeter();
       break;
     default:
-      drawLayoutDefault(statusLine1, statusLine2);
+      drawLayoutDefault();
       break;
   }
 

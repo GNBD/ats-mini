@@ -371,6 +371,7 @@ void useBand(const Band *band)
     rx.setSeekFmSNRThreshold(2); // default is 3
 
     rx.setFMDeEmphasis(fmRegions[FmRegionIdx].value);
+    applyFmStereo();
     rx.RdsInit();
     rx.setRdsConfig(1, 2, 2, 2, 2);
     rx.setGpioCtl(1, 0, 0);   // G8PTN: Enable GPIO1 as output
@@ -1023,6 +1024,9 @@ void loop()
     if(currentCmd == CMD_NONE) needRedraw = true;
     background_timer = currentTime;
   }
+
+  // Expire status messages even when no other display content changes.
+  needRedraw |= statusTick(millis());
 
   // Redraw screen if necessary
   if(needRedraw) drawScreen();

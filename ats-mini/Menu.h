@@ -48,7 +48,8 @@
 #define CMD_DATETIME   0x3100 // |
 #define CMD_UPDATEFW   0x3200 // |
 #define CMD_WIFISCAN   0x3300 // |
-#define CMD_ABOUT      0x3400 //-+
+#define CMD_FM_STEREO  0x3400 // |
+#define CMD_ABOUT      0x3500 //-+
 
 // UI Layouts
 #define UI_DEFAULT  0
@@ -110,6 +111,7 @@ bool doSideBar(uint16_t cmd, int16_t enc, int16_t enca);
 void doSelectDigit(int16_t enc);
 bool clickHandler(uint16_t cmd, bool shortPress);
 void selectBand(uint8_t idx, bool drawLoadingSSB = true);
+void applyFmStereo();
 int getTotalBands();
 int getTotalModes();
 int getTotalMemories();
@@ -122,13 +124,12 @@ uint8_t getRDSMode();
 
 int8_t getCurrentUTCOffset();
 int getTotalUTCOffsets();
-int getTotalFmRegions();
-int getTotalBleModes();
 
 void doSoftMute(int16_t enc);
 void doAgc(int16_t enc);
 void doAvc(int16_t enc);
 void doFmRegion(int16_t enc);
+void doFmStereo(int16_t enc);
 void doBandwidth(int16_t enc);
 void doVolume(int16_t enc);
 void doBrt(int16_t enc);

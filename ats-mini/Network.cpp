@@ -50,7 +50,7 @@ static uint16_t ajaxInterval = 2500;
 volatile int web_event = 0;
 
 static bool itIsTimeToWiFi = false; // TRUE: Need to connect to WiFi
-static uint32_t connectTime = millis();
+static uint32_t connectTime = 0;
 
 // Settings
 String loginUsername = "";
@@ -127,7 +127,6 @@ void netTickTime()
   if(itIsTimeToWiFi && ((millis() - connectTime) > CONNECT_TIME))
   {
     netInit(wifiModeIdx);
-    connectTime = millis();
     itIsTimeToWiFi = false;
   }
 }
@@ -185,7 +184,7 @@ void netStop()
 //
 // Initialize WiFi network and services
 //
-void netInit(uint8_t netMode, bool showStatus)
+void netInit(uint8_t netMode)
 {
   // Always disable WiFi first
   netStop();
@@ -199,14 +198,12 @@ void netInit(uint8_t netMode, bool showStatus)
     case NET_AP_ONLY:
       // Start WiFi access point if requested
       WiFi.mode(WIFI_AP);
-      // Let user see connection status if successful
-      if(wifiInitAP() && showStatus) delay(2000);
+      wifiInitAP();
       break;
     case NET_AP_CONNECT:
       // Start WiFi access point if requested
       WiFi.mode(WIFI_AP_STA);
-      // Let user see connection status if successful
-      if(wifiInitAP() && showStatus) delay(2000);
+      wifiInitAP();
       break;
     default:
       // No access point
@@ -217,9 +214,6 @@ void netInit(uint8_t netMode, bool showStatus)
   // Initialize WiFi and try connecting to a network
   if(netMode>NET_AP_ONLY && wifiConnect())
   {
-    // Let user see connection status if successful
-    if(netMode!=NET_SYNC && showStatus) delay(2000);
-
     // NTP time updates will happen every 5 minutes
     ntpClient.setUpdateInterval(5*60*1000);
 
@@ -227,7 +221,26 @@ void netInit(uint8_t netMode, bool showStatus)
     clockReset();
     for(int j=0 ; j<10 ; j++)
       if(ntpSyncTime()) break; else delay(500);
+
+    // Start the result timeout after the blocking time synchronization.
+    if(netMode!=NET_SYNC)
+      statusShow(
+        ("Connected to WiFi network (" + WiFi.SSID() + ")").c_str(),
+        ("IP : " + WiFi.localIP().toString() + " or atsmini.local").c_str()
+      );
+    else
+      statusShow(nullptr);
   }
+  else if(netMode==NET_AP_ONLY || netMode==NET_AP_CONNECT)
+  {
+    // Show the access point details when it is the available connection.
+    statusShow(
+      ("Use Access Point " + String(apSSID)).c_str(),
+      ("IP : " + WiFi.softAPIP().toString() + " or atsmini.local").c_str()
+    );
+  }
+  else
+    statusShow("Connecting to WiFi network...", "No WiFi connection");
 
   // If only connected to sync...
   if(netMode==NET_SYNC)
@@ -301,11 +314,6 @@ static bool wifiInitAP()
   WiFi.softAP(apSSID, apPWD, apChannel, apHideMe, apClients);
   WiFi.softAPConfig(ip, gateway, subnet);
 
-  drawScreen(
-    ("Use Access Point " + String(apSSID)).c_str(),
-    ("IP : " + WiFi.softAPIP().toString() + " or atsmini.local").c_str()
-  );
-
   ajaxInterval = 2500;
   return(true);
 }
@@ -315,8 +323,6 @@ static bool wifiInitAP()
 //
 static bool wifiConnect()
 {
-  String status = "Connecting to WiFi network...";
-
   // Clean credentials
   wifiMulti.APlistClean();
 
@@ -343,7 +349,8 @@ static bool wifiConnect()
   // Done with preferences
   prefs.end();
 
-  drawScreen(status.c_str());
+  statusShow("Connecting to WiFi network...", nullptr, 0);
+  drawScreen();
 
   consumeAbortPending();
   wl_status_t wifiStatus = WL_NO_SSID_AVAIL;
@@ -362,25 +369,10 @@ static bool wifiConnect()
       delay(1000);
   }
 
-  // If failed connecting to WiFi network...
-  if (wifiStatus != WL_CONNECTED)
-  {
-    // WiFi connection failed
-    drawScreen(status.c_str(), "No WiFi connection");
-    // Done
-    return(false);
-  }
-  else
-  {
-    // WiFi connection succeeded
-    drawScreen(
-      ("Connected to WiFi network (" + WiFi.SSID() + ")").c_str(),
-      ("IP : " + WiFi.localIP().toString() + " or atsmini.local").c_str()
-    );
-    // Done
+  if(wifiStatus == WL_CONNECTED)
     ajaxInterval = 1000;
-    return(true);
-  }
+
+  return(wifiStatus == WL_CONNECTED);
 }
 
 //
@@ -2278,7 +2270,6 @@ static void webUpdatePage(AsyncWebServerRequest *request, const OtaStatus &statu
   const bool busy = status.phase == OTA_CHECK_QUEUED || status.phase == OTA_QUEUED ||
                     status.phase == OTA_CONNECTING || status.phase == OTA_WRITING;
   const bool complete = status.phase == OTA_COMPLETE || status.phase == OTA_REBOOT_PENDING;
-  const bool available = status.phase == OTA_AVAILABLE;
   const String refresh = complete? "<SCRIPT>setTimeout(()=>location.replace('/'),20000);</SCRIPT>" :
                          busy? "<SCRIPT>setTimeout(()=>location.replace('/update'),1000);</SCRIPT>" : "";
   const String page = webPage(
@@ -2286,14 +2277,8 @@ static void webUpdatePage(AsyncWebServerRequest *request, const OtaStatus &statu
 "<H1>Update</H1>" + webNavigation("/update") +
 "<TABLE>"
 "<TR><TD CLASS='CENTER'>" + status.message + "</TD></TR>"
-"<TR><TD CLASS='CENTER' STYLE='padding:16px 0;'>"
-  "<FORM METHOD='POST' ACTION='/update'>"
-  "<BUTTON TYPE='SUBMIT' NAME='action' VALUE='" + String(available? "install" : "check") + "'" +
-    String(busy || complete? " DISABLED" : "") + ">" + (available? "Update" : "Check for updates") + "</BUTTON>"
-  "</FORM>"
-"</TD></TR>"
 "<TR><TD>"
-  "<DETAILS><SUMMARY>Manual upload</SUMMARY>"
+  "<DETAILS OPEN><SUMMARY>Manual upload</SUMMARY>"
   "<FORM METHOD='POST' ACTION='/update/upload' ENCTYPE='multipart/form-data' ONSUBMIT='this.elements.size.value=this.elements.firmware.files[0].size;this.querySelector(\"button\").disabled=true;'>"
   "<INPUT TYPE='HIDDEN' NAME='size'>"
   "<P STYLE='margin-top:12px;'><INPUT TYPE='FILE' NAME='firmware' ARIA-LABEL='Firmware file' ACCEPT='.bin' REQUIRED" + String(busy || complete? " DISABLED" : "") + "></P>"

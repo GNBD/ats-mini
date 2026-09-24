@@ -150,7 +150,7 @@ static void drawLargeSNMeter(int snr, int x, int y)
 //
 // Draw alternative screen layout with the large S-meter.
 //
-void drawLayoutSmeter(const char *statusLine1, const char *statusLine2)
+void drawLayoutSmeter()
 {
   // Draw preferences write request icon
   drawSaveIndicator(SAVE_OFFSET_X, SAVE_OFFSET_Y);
@@ -202,14 +202,15 @@ void drawLayoutSmeter(const char *statusLine1, const char *statusLine2)
   // @@@ FIXME: Frequency display (above) intersects the side bar!
   drawSideBar(currentCmd, ALT_MENU_OFFSET_X, ALT_MENU_OFFSET_Y, MENU_DELTA_X);
 
-  // Indicate FM pilot detection (stereo indicator)
-  drawAltStereoIndicator(ALT_STEREO_OFFSET_X, ALT_STEREO_OFFSET_Y, (currentMode==FM) && rx.getCurrentPilot());
+  // Indicate FM pilot detection, unless the audio is pinned to mono
+  drawAltStereoIndicator(ALT_STEREO_OFFSET_X, ALT_STEREO_OFFSET_Y,
+    (currentMode==FM) && (fmStereoIdx!=FM_STEREO_MONO) && rx.getCurrentPilot());
 
   if(currentCmd == CMD_SCAN)
   {
     drawScanGraphs(isSSB()? (currentFrequency + currentBFO/1000) : currentFrequency);
   }
-  else if(!drawWiFiStatus(statusLine1, statusLine2, STATUS_OFFSET_X, STATUS_OFFSET_Y))
+  else if(!drawStatus(STATUS_OFFSET_X, STATUS_OFFSET_Y))
   {
     // Show radio text if present, else show S & SN meters
     if(*getRadioText() || *getProgramInfo())

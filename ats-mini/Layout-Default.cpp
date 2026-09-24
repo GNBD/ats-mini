@@ -4,7 +4,7 @@
 #include "Menu.h"
 #include "Draw.h"
 
-void drawLayoutDefault(const char *statusLine1, const char *statusLine2)
+void drawLayoutDefault()
 {
   // Draw preferences write request icon
   drawSaveIndicator(SAVE_OFFSET_X, SAVE_OFFSET_Y);
@@ -56,14 +56,15 @@ void drawLayoutDefault(const char *statusLine1, const char *statusLine2)
   // Draw S-meter
   drawSMeter(getStrength(rssi), METER_OFFSET_X, METER_OFFSET_Y);
 
-  // Indicate FM pilot detection (stereo indicator)
-  drawStereoIndicator(METER_OFFSET_X, METER_OFFSET_Y, (currentMode==FM) && rx.getCurrentPilot());
+  // Indicate FM pilot detection, unless the audio is pinned to mono
+  drawStereoIndicator(METER_OFFSET_X, METER_OFFSET_Y,
+    (currentMode==FM) && (fmStereoIdx!=FM_STEREO_MONO) && rx.getCurrentPilot());
 
   if(currentCmd == CMD_SCAN)
   {
     drawScanGraphs(isSSB()? (currentFrequency + currentBFO/1000) : currentFrequency);
   }
-  else if(!drawWiFiStatus(statusLine1, statusLine2, STATUS_OFFSET_X, STATUS_OFFSET_Y))
+  else if(!drawStatus(STATUS_OFFSET_X, STATUS_OFFSET_Y))
   {
     // Show radio text if present, else show frequency scale
     if(*getRadioText() || *getProgramInfo())
