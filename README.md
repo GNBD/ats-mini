@@ -14,7 +14,8 @@ SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 * G8PTN, Dave:       https://github.com/G8PTN/ATS_MINI
 
 ## dual-boot (이 포크)
-<img width="885" height="567" alt="image" src="https://github.com/user-attachments/assets/8d64166c-15dc-4acb-8fe8-5a2c3f4aea3c" />
+<img width="657" height="350" alt="image" src="https://github.com/user-attachments/assets/a04bad85-3edb-43bd-9c66-b7643d7b9e33" />
+
 
 > **하드웨어: ESP32-S3 N16R8 전용.** 이 포크는 **16MB flash + 8MB OPI PSRAM
 > (N16R8)** 모듈에서만 테스트했습니다. 다른 버전(N8R2, N8R8, N16R2 등)은
