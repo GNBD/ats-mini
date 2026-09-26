@@ -3,6 +3,8 @@
 > **⚠️ 미완성 (work in progress)** — 이 펌웨어는 아직 개발 중입니다. 크래시,
 > 부팅 실패, 데이터 손실 등이 발생할 수 있습니다. 사용에 주의하세요.
 
+English: [README.en.md](README.en.md)
+
 SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 
 다음 소스를 기반으로 합니다:
@@ -37,10 +39,8 @@ SI4732 (ESP32-S3) Mini/Pocket 수신기용 펌웨어입니다.
 참고:
 
 * [ats-mini-recovery/README.md](ats-mini-recovery/README.md) - 부트 매니저 펌웨어
-* [ats-mini/bootloader.md](ats-mini/bootloader.md) - 커스텀 부트로더와 빌드 방법
 * [ats-mini/partitions.csv](ats-mini/partitions.csv) - 16MB 파티션 레이아웃
 
-ENG: [README.en.md](README.en.md)
 
 ## Releases
 
@@ -70,7 +70,7 @@ ENG: [README.en.md](README.en.md)
   로터리 엔코더 구현이 포함되어 있으며 **GPL-3.0** 조건이 적용됩니다.
   전문: [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt)
 * `ats-mini/patch_init.h`의 SSB 패치 데이터는 별도 출처(Vadim Afonkin)
- 이며 라이선스가 명확하지 않습니다. 상업적 배포 전 확인 필요. [NOTICE](NOTICE) §3.1
+ 이며 라이선스가 명확하지 않습니다. [NOTICE](NOTICE) §3.1
 * 외부 라이브러리에는 MIT, LGPL 또는 기타 라이선스가 적용될 수 있습니다.
 * 하드웨어 설계(Sunnygold 등)에는 **CC BY-NC-SA 3.0**(비상업)이 적용될 수 있습니다.
   전문: [LICENSES/CC-BY-NC-SA-3.0.txt](LICENSES/CC-BY-NC-SA-3.0.txt)
