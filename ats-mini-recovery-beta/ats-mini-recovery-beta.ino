@@ -34,6 +34,7 @@
 #define WIFI_CONNECT_TIMEOUT 15000
 #define BOOT_CONNECT_TIMEOUT 5000
 #define KB_MAX_KEYS          48
+#define HOLD_NOTICE_MS       1500
 
 static constexpr const lgfx::IFont* FONT_LARGE = &lgfx::fonts::Font4;
 static constexpr const lgfx::IFont* FONT_SMALL = &lgfx::fonts::Font2;
@@ -48,7 +49,7 @@ static constexpr const lgfx::IFont* FONT_TINY  = &lgfx::fonts::Font0;
 #define COL_KEY     0x1082
 #define COL_KEYSEL  0xFFFF
 
-#define RECOVERY_VERSION "2.0.1"
+#define RECOVERY_VERSION "3.0.0"
 
 // Default: fetch this .txt (one URL per line). Local /update_url.txt and
 // DEFAULT_UPDATE_URLS are fallbacks when the remote list is unavailable.
@@ -87,6 +88,12 @@ static const char *wifiMenu[] = {
   "WiFi File Manager"
 };
 #define WIFI_MENU_COUNT (sizeof(wifiMenu) / sizeof(wifiMenu[0]))
+
+static const char *bootModeMenu[] = {
+  "Default boot",
+  "Hold mode"
+};
+#define BOOT_MODE_COUNT (sizeof(bootModeMenu) / sizeof(bootModeMenu[0]))
 
 // ---------------------------------------------------------------------------
 // Input helpers
@@ -290,6 +297,133 @@ static void bootToApp0()
 static void bootToApp1()
 {
   bootToApp(static_cast<esp_partition_subtype_t>(ESP_PARTITION_SUBTYPE_APP_OTA_1));
+}
+
+static void drawBootModeMenu(bool isApp1, int selected)
+{
+  tft.fillScreen(COL_BG);
+  drawHeader(isApp1 ? "BOOT APP1" : "BOOT APP0");
+  tft.setTextDatum(TL_DATUM);
+  tft.setTextColor(COL_MUTED, COL_BG);
+  tft.drawString("Choose how to boot", 10, 30, FONT_SMALL);
+
+  for(int i = 0; i < (int)BOOT_MODE_COUNT; i++)
+  {
+    int y = 56 + i * 22;
+    if(i == selected)
+    {
+      tft.fillRoundRect(5, y - 3, 310, 22, 4, COL_TEXT);
+      tft.setTextColor(COL_BG, COL_TEXT);
+    }
+    else
+    {
+      tft.setTextColor(COL_TEXT, COL_BG);
+    }
+    tft.drawString(bootModeMenu[i], 15, y, FONT_SMALL);
+  }
+
+  tft.setTextColor(COL_MUTED, COL_BG);
+  tft.drawString(selected == 0 ? "Boots the app normally"
+                               : "Press + keep holding the button",
+                 10, 116, FONT_SMALL);
+  tft.drawString("Hold = Select  Click = Back", 10, 146, FONT_SMALL);
+}
+
+// Hold mode: only a notice, then the app boots with the encoder button still
+// down so the target firmware sees a plain press. Nothing here looks at the
+// button, so holding it never reboots the device and never re-enters the
+// recovery menu.
+static void runHoldModeBoot(bool isApp1)
+{
+  tft.fillScreen(COL_BG);
+  drawHeader("HOLD MODE", isApp1 ? "App1" : "App0");
+  tft.setTextDatum(TC_DATUM);
+  tft.setTextColor(COL_OK, COL_BG);
+  tft.drawString("Press and keep holding", 160, 44, FONT_SMALL);
+  tft.setTextColor(COL_TEXT, COL_BG);
+  tft.drawString("Do not release the button", 160, 110, FONT_SMALL);
+  tft.setTextColor(COL_MUTED, COL_BG);
+  tft.drawString("Booting to the app...", 160, 152, FONT_SMALL);
+  tft.drawRoundRect(28, 134, 264, 16, COL_MUTED);
+
+  uint32_t heldSince = 0;
+  int lastFrame = -1;
+
+  while(true)
+  {
+    bool down = (digitalRead(ENCODER_PUSH_BUTTON) == LOW);
+    uint32_t el = 0;
+
+    if(down)
+    {
+      if(!heldSince) heldSince = millis();
+      el = millis() - heldSince;
+      if(el >= HOLD_NOTICE_MS) break;
+    }
+    else
+    {
+      heldSince = 0;
+    }
+
+    int frame = (down ? 2 : 0) + (int)((millis() / 400) & 1);
+    if(frame != lastFrame)
+    {
+      lastFrame = frame;
+      bool blink = frame & 1;
+      if(down)
+      {
+        tft.fillRoundRect(6, 66, 308, 40, 6, blink ? COL_KEY : COL_WARN);
+        tft.setTextColor(blink ? COL_OK : COL_TEXT, blink ? COL_KEY : COL_WARN);
+        tft.drawString("KEEP HOLDING", 160, 70, FONT_LARGE);
+      }
+      else
+      {
+        tft.fillRoundRect(6, 66, 308, 40, 6, COL_KEY);
+        tft.setTextColor(blink ? COL_OK : COL_TEXT, COL_KEY);
+        tft.drawString("PRESS NOW", 160, 70, FONT_LARGE);
+      }
+    }
+
+    uint32_t w = down ? (260UL * el / HOLD_NOTICE_MS) : 0;
+    if(down && w < 2) w = 2;
+    tft.fillRoundRect(30, 136, 260, 12, 5, COL_KEY);
+    if(w) tft.fillRoundRect(30, 136, w, 12, 5, COL_OK);
+
+    delay(10);
+  }
+
+  Serial.printf("step: hold mode -> boot App%d\n", isApp1 ? 1 : 0);
+  if(isApp1) bootToApp1();
+  else bootToApp0();
+}
+
+static void runBootModeMenu(bool isApp1)
+{
+  int selected = 0;
+  drawBootModeMenu(isApp1, selected);
+
+  while(true)
+  {
+    int8_t dir = readEncoder();
+    if(dir)
+    {
+      selected += dir;
+      while(selected < 0) selected += BOOT_MODE_COUNT;
+      while(selected >= (int)BOOT_MODE_COUNT) selected -= BOOT_MODE_COUNT;
+      drawBootModeMenu(isApp1, selected);
+    }
+
+    uint32_t held = readButton();
+    if(held == 0) { delay(10); continue; }
+    if(held < 300) return;                 // click = back to the main menu
+
+    if(selected == 0)
+    {
+      if(isApp1) bootToApp1();
+      else bootToApp0();
+    }
+    runHoldModeBoot(isApp1);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1688,19 +1822,19 @@ static void drawAboutPage(int page)
     {
       tft.setTextColor(COL_TEXT, COL_BG);
       tft.drawString("Recovery Help", 8, 38, FONT_SMALL);
-      tft.drawString("Boot App0/1", 8, 54, FONT_SMALL);
-      tft.drawString("Firmware Upd", 8, 70, FONT_SMALL);
-      tft.drawString("WiFi", 8, 86, FONT_SMALL);
-      tft.drawString("Setting/Mgr", 8, 102, FONT_SMALL);
-      tft.drawString("Erase", 8, 118, FONT_SMALL);
-      tft.drawString("About", 8, 134, FONT_SMALL);
+      tft.drawString("Boot App0/1", 8, 56, FONT_SMALL);
+      tft.drawString("Firmware Upd", 8, 74, FONT_SMALL);
+      tft.drawString("WiFi", 8, 92, FONT_SMALL);
+      tft.drawString("Setting/Mgr", 8, 110, FONT_SMALL);
+      tft.drawString("Erase", 8, 128, FONT_SMALL);
+      tft.drawString("About", 8, 146, FONT_SMALL);
       tft.setTextColor(COL_MUTED, COL_BG);
-      tft.drawString("boot a slot", 110, 54, FONT_SMALL);
-      tft.drawString("Local/Network", 110, 70, FONT_SMALL);
-      tft.drawString("scan+password", 110, 86, FONT_SMALL);
-      tft.drawString("AP file upload", 110, 102, FONT_SMALL);
-      tft.drawString("Factory/partitions", 110, 118, FONT_SMALL);
-      tft.drawString("this screen", 110, 134, FONT_SMALL);
+      tft.drawString("slot + mode", 110, 56, FONT_SMALL);
+      tft.drawString("Local/Network", 110, 74, FONT_SMALL);
+      tft.drawString("scan+password", 110, 92, FONT_SMALL);
+      tft.drawString("AP file upload", 110, 110, FONT_SMALL);
+      tft.drawString("Factory/partitions", 110, 128, FONT_SMALL);
+      tft.drawString("this screen", 110, 146, FONT_SMALL);
       break;
     }
     case 4:
@@ -1708,13 +1842,20 @@ static void drawAboutPage(int page)
       tft.setTextColor(COL_TEXT, COL_BG);
       tft.drawString("Flash Help (esptool)", 8, 38, FONT_SMALL);
       tft.setTextColor(COL_MUTED, COL_BG);
-      tft.drawString("0x0000    bootloader", 8, 56, FONT_SMALL);
-      tft.drawString("0x8000    partitions", 8, 72, FONT_SMALL);
-      tft.drawString("0x10000   app0", 8, 88, FONT_SMALL);
-      tft.drawString("0x210000  app1", 8, 104, FONT_SMALL);
-      tft.drawString("0x610000  recovery", 8, 120, FONT_SMALL);
-      tft.drawString("0x810000  littlefs", 8, 136, FONT_SMALL);
-      tft.drawString("write-flash 0x0 <image>", 8, 152, FONT_SMALL);
+
+      // 현재 파티션 테이블을 그대로 나열 (2열)
+      int idx = 0;
+      char buf[40];
+      esp_partition_iterator_t it =
+        esp_partition_find(ESP_PARTITION_TYPE_ANY, ESP_PARTITION_SUBTYPE_ANY, NULL);
+      while(it)
+      {
+        const esp_partition_t *p = esp_partition_get(it);
+        snprintf(buf, sizeof(buf), "0x%06X %s", (unsigned)p->address, p->label);
+        tft.drawString(buf, 6 + (idx / 8) * 162, 52 + (idx % 8) * 14, FONT_SMALL);
+        idx++;
+        it = esp_partition_next(it);
+      }
       break;
     }
   }
@@ -1807,11 +1948,11 @@ static void runRecoveryMenu()
     switch(selected)
     {
       case 0:
-        bootToApp0();
+        runBootModeMenu(false);
         break;
 
       case 1:
-        bootToApp1();
+        runBootModeMenu(true);
         break;
 
       case 2:
